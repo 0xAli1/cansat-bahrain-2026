@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CanSat Bahrain 2026 — mission brief, plan, and a working demo</title>
+<meta name="description" content="What the CanSat Bahrain 2026 competition asks for, a week-by-week plan to win it, and a full simulated mission with decoded telemetry built to prove the approach.">
+<style>
+  :root{
+    --paper:#EDEFF2; --sheet:#FDFDFC; --ink:#131A21; --rule:#C6CDD4; --hair:#DDE2E7;
+    --muted:#5A6672; --teal:#0F6E6B; --amber:#C4541F; --blue:#1F5C9E;
+    --display:"Bahnschrift","DIN Alternate","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+    --body:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
+    --col:980px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+    font-size:16.5px;line-height:1.62;
+  }
+  .sheet{max-width:1180px;margin:26px auto;background:var(--sheet);
+    border:1px solid var(--rule);box-shadow:0 1px 0 rgba(19,26,33,.04)}
+  .pad{padding:0 46px}
+  main{max-width:var(--col);margin:0 auto}
+  a{color:var(--teal);text-underline-offset:3px;text-decoration-thickness:1px}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+  h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:-.012em;line-height:1.1;margin:0}
+  h1{font-size:clamp(2.1rem,4.6vw,3.05rem)}
+  h2{font-size:clamp(1.45rem,2.6vw,1.85rem);letter-spacing:-.008em}
+  h3{font-size:1.06rem;letter-spacing:0}
+  p{margin:0 0 1em}
+  .lede{font-size:1.12rem;max-width:64ch}
+
+  /* ---------- masthead ---------- */
+  .mast{display:flex;justify-content:space-between;gap:18px;align-items:baseline;
+    padding:16px 46px;border-bottom:1px solid var(--rule);font-size:.82rem;color:var(--muted)}
+  .mast b{font-family:var(--display);font-size:.95rem;color:var(--ink);font-weight:600;
+    letter-spacing:.01em}
+
+  /* ---------- hero ---------- */
+  .hero{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);gap:52px;
+    padding:40px 0 8px;align-items:start}
+  .drawing{background:var(--sheet);border:1px solid var(--hair);padding:6px 0 2px}
+  .drawing figcaption{font-size:.76rem;color:var(--muted);padding:2px 14px 8px;
+    border-top:1px solid var(--hair);margin-top:4px;display:flex;justify-content:space-between;gap:12px}
+  svg{display:block;width:100%;height:auto}
+  .spec{margin:26px 0 0;border-top:1px solid var(--rule)}
+  .spec dl{display:grid;grid-template-columns:auto 1fr;gap:0;margin:0}
+  .spec dt,.spec dd{margin:0;padding:9px 0;border-bottom:1px solid var(--hair)}
+  .spec dt{font-family:var(--display);font-size:.82rem;color:var(--muted);
+    padding-right:26px;white-space:nowrap}
+  .spec dd{font-size:.95rem}
+  .deadline{margin:22px 0 0;padding:14px 18px;border:1px solid var(--amber);
+    border-left-width:4px;background:#C4541F0D;font-size:.94rem}
+  .deadline strong{font-family:var(--display);font-size:1.02rem}
+
+  /* ---------- sections ---------- */
+  section{padding:44px 0 0}
+  .rule{border-top:1px solid var(--rule);margin:44px 0 0}
+  .kicker{font-family:var(--display);font-size:.8rem;color:var(--muted);margin-bottom:6px}
+  h2+p{margin-top:.7em}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:38px}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+
+  /* ---------- score bar ---------- */
+  .score{display:flex;height:44px;border:1px solid var(--rule);margin:22px 0 14px;
+    font-family:var(--display);font-size:.83rem;overflow:hidden}
+  .score span{display:flex;align-items:center;padding:0 12px;color:#fff;white-space:nowrap;
+    border-right:1px solid #ffffff40}
+  .score span:last-child{border-right:0;color:var(--ink)}
+  .score .s1{background:var(--teal);flex:35}
+  .score .s2{background:#3E8F8C;flex:30}
+  .score .s3{background:var(--blue);flex:25}
+  .score .s4{background:var(--hair);flex:10}
+  .scorewhy{font-size:.87rem;color:var(--muted);display:grid;gap:5px}
+  .scorewhy b{color:var(--ink);font-family:var(--display)}
+
+  /* ---------- phases ---------- */
+  .phases{counter-reset:ph;border-top:1px solid var(--rule)}
+  .phase{display:grid;grid-template-columns:34px 150px 1fr;gap:18px;padding:15px 0;
+    border-bottom:1px solid var(--hair);align-items:baseline}
+  .phase .n{font-family:var(--display);font-size:.95rem;color:var(--amber)}
+  .phase .when{font-family:var(--mono);font-size:.79rem;color:var(--muted)}
+  .phase h3{margin-bottom:2px}
+  .phase p{margin:0;font-size:.93rem}
+
+  /* ---------- data ---------- */
+  table{border-collapse:collapse;width:100%;font-size:.9rem}
+  caption{text-align:left;font-size:.8rem;color:var(--muted);padding-bottom:7px}
+  th,td{text-align:left;padding:8px 12px 8px 0;border-bottom:1px solid var(--hair)}
+  th{font-family:var(--display);font-size:.79rem;color:var(--muted);font-weight:600;
+    border-bottom:1px solid var(--rule)}
+  td.num,th.num{text-align:right;padding-right:0;font-family:var(--mono);font-size:.85rem;
+    font-variant-numeric:tabular-nums}
+  .out{font-family:var(--display);color:var(--teal);font-weight:600}
+
+  figure.plot{margin:26px 0 0}
+  figure.plot img{width:100%;height:auto;border:1px solid var(--hair);display:block}
+  figure.plot figcaption{font-size:.83rem;color:var(--muted);padding-top:8px}
+  .replay{margin:26px 0 0;border:1px solid var(--hair);background:var(--paper);padding:20px;
+    display:flex;justify-content:center}
+  .replay iframe{width:700px;max-width:100%;height:560px;border:0;background:transparent}
+
+  .note{border-left:3px solid var(--teal);padding:2px 0 2px 18px;margin:24px 0;font-size:.94rem}
+  .note.warn{border-left-color:var(--amber)}
+  ul.tight{margin:0 0 1em;padding-left:20px}
+  ul.tight li{margin-bottom:7px}
+  code{font-family:var(--mono);font-size:.86em;background:#131A210A;padding:1px 5px;
+    border:1px solid var(--hair)}
+
+  .titleblock{border-top:1px solid var(--rule);margin-top:48px;
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));font-size:.8rem}
+  .titleblock div{padding:14px 18px 14px 0;border-right:1px solid var(--hair)}
+  .titleblock div:last-child{border-right:0}
+  .titleblock dt{font-family:var(--display);color:var(--muted);margin-bottom:3px}
+  .titleblock dd{margin:0}
+  footer{padding:0 46px 30px;color:var(--muted);font-size:.83rem}
+
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr;gap:30px}
+    .two,.three{grid-template-columns:1fr;gap:22px}
+    .phase{grid-template-columns:26px 1fr;gap:12px}
+    .phase .when{grid-column:2}
+    .mast,.pad,footer{padding-left:22px;padding-right:22px}
+    .titleblock{grid-template-columns:1fr 1fr}
+    body{font-size:16px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="mast">
+    <span><b>CanSat Bahrain 2026</b> &nbsp;·&nbsp; mission brief, plan, and a working demo</span>
+    <span>prepared 12 October 2026</span>
+  </div>
+
+  <div class="pad">
+  <main>
+
+    <!-- ================= HERO ================= -->
+    <div class="hero">
+      <figure class="drawing">
+        <svg viewBox="0 0 470 470" role="img" aria-label="Scaled technical drawing of the CanSat: a 66 by 115 millimetre can containing a camera, sensors, microcontroller, radio and battery, with a parachute above it.">
+          <defs>
+            <marker id="tick" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto">
+              <path d="M4.5 0.6 L4.5 8.4 M0.6 4.5 L8.4 4.5" stroke="#131A21" stroke-width="1.1" fill="none"/>
+            </marker>
+            <marker id="dot" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5">
+              <circle cx="3.5" cy="3.5" r="2" fill="#5A6672"/>
+            </marker>
+          </defs>
+
+          <!-- parachute, not to scale -->
+          <g stroke="#C4541F" fill="none" stroke-width="1.6">
+            <path d="M150 96 Q235 22 320 96" />
+            <path d="M150 96 Q192 74 235 96" stroke="#C4541F88"/>
+            <path d="M235 96 Q278 74 320 96" stroke="#C4541F88"/>
+            <path d="M150 96 L235 150 M320 96 L235 150" stroke="#C4541F99" stroke-dasharray="4 3"/>
+          </g>
+          <text x="235" y="18" font-family="Bahnschrift, Arial Narrow, sans-serif" font-size="11.5"
+                fill="#C4541F" text-anchor="middle">canopy Ø 0.58 m — not to scale</text>
+          <text x="343" y="92" font-family="ui-monospace, Consolas, monospace" font-size="10"
+                fill="#5A6672">shock cord</text>
+
+          <!-- can body: 66 mm wide x 115 mm tall at 2.4 px/mm -->
+          <g>
+            <rect x="173" y="150" width="124" height="264" rx="13" ry="13"
+                  fill="#FDFDFC" stroke="#131A21" stroke-width="2.2"/>
+            <rect x="173" y="163" width="124" height="8" fill="#EDEFF2" stroke="none"/>
+            <rect x="173" y="189" width="124" height="8" fill="#EDEFF2" stroke="none"/>
+          </g>
+
+          <!-- internal components -->
+          <g font-family="ui-monospace, Consolas, monospace" font-size="10.5" fill="#131A21">
+            <rect x="186" y="176" width="58" height="40" fill="#1F5C9E1A" stroke="#1F5C9E"
+                  stroke-width="1.2"/>
+            <text x="215" y="200" text-anchor="middle">camera</text>
+
+            <rect x="256" y="176" width="30" height="40" fill="#0F6E6B18" stroke="#0F6E6B"
+                  stroke-width="1.2"/>
+            <rect x="186" y="228" width="100" height="30" fill="#0F6E6B18" stroke="#0F6E6B"
+                  stroke-width="1.2"/>
+            <text x="236" y="248" text-anchor="middle">BMP180 · DHT11 · IMU · MAG</text>
+
+            <rect x="186" y="272" width="100" height="42" fill="#C4541F18" stroke="#C4541F"
+                  stroke-width="1.2"/>
+            <text x="236" y="298" text-anchor="middle">Arduino Nano</text>
+
+            <rect x="186" y="328" width="100" height="30" fill="#131A2108" stroke="#5A6672"
+                  stroke-width="1.2"/>
+            <text x="236" y="348" text-anchor="middle">LiPo pack</text>
+
+            <rect x="186" y="372" width="62" height="26" fill="#1F5C9E1A" stroke="#1F5C9E"
+                  stroke-width="1.2"/>
+            <text x="217" y="390" text-anchor="middle">LoRa 433</text>
+            <rect x="256" y="372" width="30" height="26" fill="#131A2108" stroke="#5A6672"
+                  stroke-width="1.2"/>
+            <text x="271" y="390" text-anchor="middle">SD</text>
+          </g>
+
+          <!-- external antenna -->
+          <path d="M271 372 L296 318" stroke="#1F5C9E" stroke-width="1.5" fill="none"/>
+          <text x="304" y="314" font-family="ui-monospace, Consolas, monospace" font-size="10"
+                fill="#1F5C9E">antenna (external)</text>
+
+          <!-- vertical dimension -->
+          <g stroke="#131A21" stroke-width="1">
+            <path d="M325 150 L325 414" marker-start="url(#tick)" marker-end="url(#tick)"/>
+            <path d="M317 150 L333 150 M317 414 L333 414" stroke="#131A21"/>
+          </g>
+          <text x="336" y="286" font-family="ui-monospace, Consolas, monospace" font-size="11.5"
+                fill="#131A21">115 mm</text>
+
+          <!-- horizontal dimension -->
+          <g stroke="#131A21" stroke-width="1">
+            <path d="M173 432 L297 432" marker-start="url(#tick)" marker-end="url(#tick)"/>
+          </g>
+          <text x="235" y="450" text-anchor="middle" font-family="ui-monospace, Consolas, monospace"
+                font-size="11.5" fill="#131A21">66 mm</text>
+          <text x="235" y="466" text-anchor="middle" font-family="Bahnschrift, Arial Narrow, sans-serif"
+                font-size="11" fill="#5A6672">350 ml envelope · soft-drink can</text>
+        </svg>
+        <figcaption>
+          <span>Mission envelope, drawn to scale (1 mm = 2.4 px)</span>
+          <span>parachute not to scale</span>
+        </figcaption>
+      </figure>
+
+      <div>
+        <h1>A satellite the size of a soda can</h1>
+        <p class="lede" style="margin-top:18px">Your team designs, builds, tests and flies it.
+        Every subsystem a real satellite carries — power, communications, sensors, payload and a
+        parachute recovery system — has to fit inside a 66&nbsp;mm cylinder, 115&nbsp;mm tall.
+        On launch day a Bahrain Space Agency engineer drops it from a tower. It has to collect and
+        transmit data on the way down, land safely, and then you present the mission to a jury of
+        BSA engineers.</p>
+
+        <div class="spec">
+          <dl>
+            <dt>Organisers</dt><dd>Bahrain Space Agency with the American University of Bahrain</dd>
+            <dt>Team</dt><dd>Exactly five university students, plus one supervisor</dd>
+            <dt>To register</dt><dd>A registration form plus a Letter of Endorsement signed by your Dean</dd>
+            <dt>Commitment</dt><dd>About eight hours a week, 25 October to 12 December</dd>
+            <dt>Launch day</dt><dd>12 December 2026</dd>
+            <dt>Kit</dt><dd>Free: Arduino Nano, RGB camera, barometer, temperature/humidity sensor,
+              six-axis IMU, magnetometer, 433 MHz LoRa radio, breadboard, battery case</dd>
+          </dl>
+        </div>
+
+        <div class="deadline">
+          <strong>Registration closes 17 October 2026.</strong>
+          That is five days from when this page was written, and it is the only genuinely
+          blocking item on the list — five students, one supervisor and a signed endorsement
+          letter, submitted through the official form in the guidelines.
+        </div>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- ================= SCORING ================= -->
+    <section>
+      <div class="kicker">How the jury splits 100 points</div>
+      <h2>Two thirds of the score is science and communication, not flight</h2>
+      <div class="score" role="img" aria-label="Scoring weights: scientific value 35 percent, technical achievement 30 percent, professional competencies 25 percent, outreach 10 percent.">
+        <span class="s1">Scientific value 35%</span>
+        <span class="s2">Technical 30%</span>
+        <span class="s3">Professional 25%</span>
+        <span class="s4">Outreach 10%</span>
+      </div>
+      <div class="scorewhy">
+        <p style="margin:0"><b>Scientific value, the largest single block.</b> Whether your
+        objectives are worth answering, whether your measurements actually answer them, and whether
+        you understand the science behind your own mission — that last one is tested live in the
+        three minutes of questions after your presentation.</p>
+        <p style="margin:0"><b>Professional competencies is a quarter of the total.</b> Teamwork,
+        adaptability, presentation skill and technical reporting. A simpler mission that is
+        documented and defended cleanly beats a clever one nobody can explain.</p>
+        <p style="margin:0"><b>Outreach is cheap points.</b> A project page, posts, media coverage,
+        a talk at the university. Ten per cent for work that takes an afternoon.</p>
+      </div>
+    </section>
+
+    <div class="rule"></div>
+
+    <!-- ================= PHASES ================= -->
+    <section>
+      <div class="kicker">The competition runs in four stages</div>
+      <h2>Seven weeks from workshop to launch</h2>
+      <p style="max-width:70ch">Between each stage sits a design review. Reviews are gates: the
+      jury can send you back to fix things, and the review on 2 December is the one that
+      authorises your flight. Each one needs its own presentation on the official template.</p>
+
+      <div class="phases">
+        <div class="phase">
+          <div class="n">1</div><div class="when">4–17 Oct</div>
+          <div><h3>Registration</h3><p>Five students, one supervisor, one Dean-endorsed
+          endorsement letter, one form. Everything else depends on this.</p></div>
+        </div>
+        <div class="phase">
+          <div class="n">2</div><div class="when">25 Oct</div>
+          <div><h3>Induction and workshop</h3><p>Collect the kit at AUBH, learn the hardware.
+          The Mission Concept Review kicks off the same day — and the MCR deck is due three days
+          later.</p></div>
+        </div>
+        <div class="phase">
+          <div class="n">3</div><div class="when">25 Oct–9 Dec</div>
+          <div><h3>Design, build, integrate, test</h3><p>Four reviews on a compressed schedule:
+          Mission Concept (28 Oct), Preliminary Design (11 Nov), Critical Design (18 Nov), then
+          System Integration and Flight Readiness (2 Dec) with the Pre-Launch report.</p></div>
+        </div>
+        <div class="phase">
+          <div class="n">4</div><div class="when">12 Dec</div>
+          <div><h3>Launch and finals</h3><p>Arrive flight-ready, hand the CanSat to the launch
+          expert, fly it, recover it, and present the results in launch order. Seven minutes, then
+          three minutes of questions. Every team member speaks.</p></div>
+        </div>
+      </div>
+
+      <div class="note warn">The schedule has two hard squeezes worth planning around: the MCR is
+      due three days after the workshop that starts it, and the CDR is due three days after the
+      review that opens it. Draft both decks before those dates, not after.</div>
+    </section>
+
+    <div class="rule"></div>
+
+    <!-- ================= THE DEMO ================= -->
+    <section>
+      <div class="kicker">Proof of concept, not a slideshow</div>
+      <h2>A complete mission, simulated and decoded end to end</h2>
+      <p style="max-width:70ch">To answer "can AI actually help with this?" we built the thing
+      instead of talking about it. One full mission was run: the parachute sized from the drag
+      equation, the flight simulated, the sensors modelled as the real hardware behaves, the
+      readings packed into the exact 34-byte frames the firmware puts on the radio, 12 per cent
+      of those packets thrown away and 3 per cent corrupted, and then the whole stream decoded
+      back by a ground station with checksums. <strong>Every number below came out of that
+      decoding — not out of the simulation's own notes.</strong></p>
+
+      <table>
+        <caption>Mission results, decoded from 208 received packets</caption>
+        <thead><tr><th>Measurement</th><th class="num">Value</th><th>Why it matters</th></tr></thead>
+        <tbody>
+          <tr><td>Parachute diameter</td><td class="num">0.579 m</td>
+              <td>Sized by solving the descent equation for a 350 g payload</td></tr>
+          <tr><td>Terminal descent, measured</td><td class="num out">4.99 m/s</td>
+              <td>Against a 5.0 m/s design target — the maths and the flight agree</td></tr>
+          <tr><td>Flight time from 250 m</td><td class="num">47.4 s</td>
+              <td>Sets how much data you can actually collect</td></tr>
+          <tr><td>Peak free-fall rate</td><td class="num">12.6 m/s</td>
+              <td>The load the canopy has to survive</td></tr>
+          <tr><td>Deployment detected at</td><td class="num">2.8 s</td>
+              <td>Against a 2.0 s timer — the filter adds measurable lag</td></tr>
+          <tr><td>Measured lapse rate</td><td class="num">−0.386 °C/100 m</td>
+              <td>True value is −0.65: the sensor's own lag biases your science</td></tr>
+          <tr><td>Link success rate</td><td class="num">87.4 %</td>
+              <td>Through 12 per cent loss and corrupted frames</td></tr>
+          <tr><td>Wind drift at landing</td><td class="num">115 m</td>
+              <td>How far away you have to walk to recover it</td></tr>
+        </tbody>
+      </table>
+
+      <figure class="plot">
+        <img src="figures/01_mission_profile.png"
+             alt="Two stacked charts: altitude falling from 250 metres to zero over 47 seconds with a parachute deployment marker at 2.8 seconds, and below it the descent rate, showing a noise-dominated raw signal next to a filtered one settling at 5 metres per second.">
+        <figcaption><strong>Altitude and descent rate.</strong> The grey trace is what you get by
+        differentiating raw barometric altitude: pure noise, ±15 m/s of fiction. The amber trace
+        is the same data after a seven-sample moving average and a central difference. That
+        processing chain is a slide in the Critical Design Review.</figcaption>
+      </figure>
+
+      <figure class="plot">
+        <img src="figures/02_science_profile.png"
+             alt="Three panels: temperature against altitude and humidity against altitude, both binned every ten metres with a shaded one-sigma band over a faint scatter of raw samples, and the two sensors plotted against mission time.">
+        <figcaption><strong>The science deliverable.</strong> Plotting a 1 °C-resolution sensor
+        raw against altitude gives unreadable horizontal bands. Binning every 10 m and quoting
+        mean ± 1σ is what makes the profile defensible — and what the reporting criteria are
+        actually asking for.</figcaption>
+      </figure>
+
+      <figure class="plot">
+        <img src="figures/03_dynamics.png"
+             alt="Two stacked charts over mission time: the y-axis gyroscope showing pendulum oscillation that grows once the parachute opens, and the magnetometer heading swinging around 132 degrees.">
+        <figcaption><strong>Vehicle dynamics.</strong> Canopy pendulum swing and body spin, read
+        from the six-axis IMU and the magnetometer. This is where you find out whether your
+        parachute is stable or whether your payload is tumbling.</figcaption>
+      </figure>
+
+      <div class="replay">
+        <iframe src="replay.html" title="Interactive replay of the simulated CanSat flight"
+                loading="lazy"></iframe>
+      </div>
+      <p style="font-size:.86rem;color:var(--muted);margin-top:10px">Press play to fly the
+      mission, or drag the slider to scrub through it. The can falls under its canopy, the
+      readouts update live, and the chart cursor follows the descent.</p>
+    </section>
+
+    <div class="rule"></div>
+
+    <!-- ================= PLAN ================= -->
+    <section>
+      <div class="kicker">What to do, in what order</div>
+      <h2>The plan, week by week</h2>
+      <div class="two">
+        <div>
+          <h3 style="margin-bottom:8px">Blocking first</h3>
+          <ul class="tight">
+            <li>Recruit exactly five students and one supervisor by <strong>17 October</strong>.</li>
+            <li>Get the Letter of Endorsement signed by the Dean or higher.</li>
+            <li>Submit the registration form — nothing else can start without it.</li>
+            <li>Email <code>events@bsa.bh</code> for the milestone presentation templates. The
+              guidelines reference an Appendix I that was not included in the published PDF.</li>
+          </ul>
+          <h3 style="margin:18px 0 8px">Then design for the score</h3>
+          <ul class="tight">
+            <li>Primary mission: the full descent profile — pressure, altitude, temperature,
+              humidity, attitude, heading, plus images.</li>
+            <li>Secondary mission: one thing that produces a <em>measurement</em>, not just
+              photographs. A parachute aerodynamics study or an added air-quality sensor both
+              score, and both are explicitly rewarded as kit enhancements.</li>
+            <li>Log to a microSD card as well as transmitting. A lost packet should never mean a
+              lost mission.</li>
+            <li>Stand up the outreach page in week one, not week nine.</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="margin-bottom:8px">Watch out for</h3>
+          <ul class="tight">
+            <li>The kit lists a LoRa <em>transmitter</em> only. Confirm whether a ground-station
+              receiver is supplied before assuming it is.</li>
+            <li>An Arduino Nano cannot drive a normal camera module. This is the single biggest
+              technical unknown — find out the exact model at the workshop.</li>
+            <li>Differentiating raw barometric altitude at 5 Hz produces ±15 m/s of noise. Filter
+              before you differentiate, and say so in the review.</li>
+            <li>Your temperature sensor has thermal lag that will bias your measured lapse rate
+              by roughly a third. Quantify it or you will misreport your own science.</li>
+            <li>Free-fall acceleration and the parachute's braking have almost the same slope.
+              A naive deployment detector will fire at the wrong moment.</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top:22px"><a href="plan.html">Read the full plan</a> — role split for five
+      people, the technical architecture, a week-by-week schedule, and the questions to send the
+      organisers before you start.</p>
+    </section>
+
+    <div class="rule"></div>
+
+    <!-- ================= AI ================= -->
+    <section>
+      <div class="kicker">The question that started this</div>
+      <h2>Yes, you can use AI. Here is exactly where it helps and where it costs you.</h2>
+      <p style="max-width:70ch">The competition guidelines place no restriction on the tools you
+      use, and the jury grades your result and your understanding of it. Everything on this
+      page — the physics, the packet layout, the checksums, the filtering, the plots, the
+      interactive replay — was produced by an AI in a single sitting. That is the honest
+      answer to whether it helps.</p>
+      <div class="two" style="margin-top:24px">
+        <div>
+          <h3 style="color:var(--teal);margin-bottom:10px">Where it earns its keep</h3>
+          <ul class="tight">
+            <li>Learning six sensor datasheets fast, including their error characteristics.</li>
+            <li>Firmware scaffolding, telemetry packet formats, checksums, logging.</li>
+            <li>The analysis code that turns a CSV into labelled, unit-correct graphs.</li>
+            <li>Parachute sizing, drag maths, structural calculations you can then verify.</li>
+            <li>Turning your own notes into a review-ready structure, and editing the report.</li>
+            <li>Generating the hostile judge questions for rehearsal. Three minutes of live
+              questions is a quarter of your score.</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="color:var(--amber);margin-bottom:10px">Where it will cost you marks</h3>
+          <ul class="tight">
+            <li>Scientific understanding is judged in person. If nobody on the team can derive
+              the equation behind the design, that block collapses.</li>
+            <li>A report you cannot defend is worth less than a simpler report you can.</li>
+            <li>It cannot solder, fit, drop, fly or recover anything. The schedule is a physical
+              testing bottleneck no model shortens.</li>
+            <li>It will confidently produce wrong numbers. Every figure it gives you gets checked
+              against the datasheet before it enters a review deck.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note">Two real bugs in this very project were caught only by running the code,
+      not by reading it: an error that threw on the chart's first paint, and a playback cursor
+      that could never advance, leaving the replay frozen forever. Both looked fine. That is the
+      same discipline the flight-readiness review is actually testing.</div>
+    </section>
+
+    <!-- ================= TITLE BLOCK ================= -->
+    <div class="titleblock">
+      <div><dt>Subject</dt><dd>CanSat Bahrain 2026 entry — mission brief and working demo</dd></div>
+      <div><dt>Status</dt><dd>Simulated mission. No hardware has been built or flown.</dd></div>
+      <div><dt>Source</dt><dd>BSA / AUBH competition guidelines, October 2026</dd></div>
+      <div><dt>Contact</dt><dd>events@bsa.bh for competition questions</dd></div>
+    </div>
+
+  </main>
+  </div>
+
+  <footer>
+    <p style="margin-top:14px">The flight numbers on this page come from a physics simulation, not
+    from a real drop — the simulation, the packet decoder and the figures are all reproducible from
+    the source in this repository. If you are sharing this with a team, start with the registration
+    deadline: 17 October 2026.</p>
+  </footer>
+</div>
+</body>
+</html>

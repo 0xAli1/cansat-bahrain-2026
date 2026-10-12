@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The plan — CanSat Bahrain 2026</title>
+<style>
+  :root{
+    --paper:#EDEFF2; --sheet:#FDFDFC; --ink:#131A21; --rule:#C6CDD4; --hair:#DDE2E7;
+    --muted:#5A6672; --teal:#0F6E6B; --amber:#C4541F; --blue:#1F5C9E;
+    --display:"Bahnschrift","DIN Alternate","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+    --body:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
+    --col:980px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+    font-size:16.5px;line-height:1.62;
+  }
+  .sheet{max-width:1180px;margin:26px auto;background:var(--sheet);
+    border:1px solid var(--rule);box-shadow:0 1px 0 rgba(19,26,33,.04)}
+  .pad{padding:0 46px}
+  main{max-width:var(--col);margin:0 auto}
+  a{color:var(--teal);text-underline-offset:3px;text-decoration-thickness:1px}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+  h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:-.012em;line-height:1.1;margin:0}
+  h1{font-size:clamp(2.1rem,4.6vw,3.05rem)}
+  h2{font-size:clamp(1.45rem,2.6vw,1.85rem);letter-spacing:-.008em}
+  h3{font-size:1.06rem;letter-spacing:0}
+  p{margin:0 0 1em}
+  .lede{font-size:1.12rem;max-width:64ch}
+
+  /* ---------- masthead ---------- */
+  .mast{display:flex;justify-content:space-between;gap:18px;align-items:baseline;
+    padding:16px 46px;border-bottom:1px solid var(--rule);font-size:.82rem;color:var(--muted)}
+  .mast b{font-family:var(--display);font-size:.95rem;color:var(--ink);font-weight:600;
+    letter-spacing:.01em}
+
+  /* ---------- hero ---------- */
+  .hero{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);gap:52px;
+    padding:40px 0 8px;align-items:start}
+  .drawing{background:var(--sheet);border:1px solid var(--hair);padding:6px 0 2px}
+  .drawing figcaption{font-size:.76rem;color:var(--muted);padding:2px 14px 8px;
+    border-top:1px solid var(--hair);margin-top:4px;display:flex;justify-content:space-between;gap:12px}
+  svg{display:block;width:100%;height:auto}
+  .spec{margin:26px 0 0;border-top:1px solid var(--rule)}
+  .spec dl{display:grid;grid-template-columns:auto 1fr;gap:0;margin:0}
+  .spec dt,.spec dd{margin:0;padding:9px 0;border-bottom:1px solid var(--hair)}
+  .spec dt{font-family:var(--display);font-size:.82rem;color:var(--muted);
+    padding-right:26px;white-space:nowrap}
+  .spec dd{font-size:.95rem}
+  .deadline{margin:22px 0 0;padding:14px 18px;border:1px solid var(--amber);
+    border-left-width:4px;background:#C4541F0D;font-size:.94rem}
+  .deadline strong{font-family:var(--display);font-size:1.02rem}
+
+  /* ---------- sections ---------- */
+  section{padding:44px 0 0}
+  .rule{border-top:1px solid var(--rule);margin:44px 0 0}
+  .kicker{font-family:var(--display);font-size:.8rem;color:var(--muted);margin-bottom:6px}
+  h2+p{margin-top:.7em}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:38px}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+
+  /* ---------- score bar ---------- */
+  .score{display:flex;height:44px;border:1px solid var(--rule);margin:22px 0 14px;
+    font-family:var(--display);font-size:.83rem;overflow:hidden}
+  .score span{display:flex;align-items:center;padding:0 12px;color:#fff;white-space:nowrap;
+    border-right:1px solid #ffffff40}
+  .score span:last-child{border-right:0;color:var(--ink)}
+  .score .s1{background:var(--teal);flex:35}
+  .score .s2{background:#3E8F8C;flex:30}
+  .score .s3{background:var(--blue);flex:25}
+  .score .s4{background:var(--hair);flex:10}
+  .scorewhy{font-size:.87rem;color:var(--muted);display:grid;gap:5px}
+  .scorewhy b{color:var(--ink);font-family:var(--display)}
+
+  /* ---------- phases ---------- */
+  .phases{counter-reset:ph;border-top:1px solid var(--rule)}
+  .phase{display:grid;grid-template-columns:34px 150px 1fr;gap:18px;padding:15px 0;
+    border-bottom:1px solid var(--hair);align-items:baseline}
+  .phase .n{font-family:var(--display);font-size:.95rem;color:var(--amber)}
+  .phase .when{font-family:var(--mono);font-size:.79rem;color:var(--muted)}
+  .phase h3{margin-bottom:2px}
+  .phase p{margin:0;font-size:.93rem}
+
+  /* ---------- data ---------- */
+  table{border-collapse:collapse;width:100%;font-size:.9rem}
+  caption{text-align:left;font-size:.8rem;color:var(--muted);padding-bottom:7px}
+  th,td{text-align:left;padding:8px 12px 8px 0;border-bottom:1px solid var(--hair)}
+  th{font-family:var(--display);font-size:.79rem;color:var(--muted);font-weight:600;
+    border-bottom:1px solid var(--rule)}
+  td.num,th.num{text-align:right;padding-right:0;font-family:var(--mono);font-size:.85rem;
+    font-variant-numeric:tabular-nums}
+  .out{font-family:var(--display);color:var(--teal);font-weight:600}
+
+  figure.plot{margin:26px 0 0}
+  figure.plot img{width:100%;height:auto;border:1px solid var(--hair);display:block}
+  figure.plot figcaption{font-size:.83rem;color:var(--muted);padding-top:8px}
+  .replay{margin:26px 0 0;border:1px solid var(--hair);background:var(--paper);padding:20px;
+    display:flex;justify-content:center}
+  .replay iframe{width:700px;max-width:100%;height:560px;border:0;background:transparent}
+
+  .note{border-left:3px solid var(--teal);padding:2px 0 2px 18px;margin:24px 0;font-size:.94rem}
+  .note.warn{border-left-color:var(--amber)}
+  ul.tight{margin:0 0 1em;padding-left:20px}
+  ul.tight li{margin-bottom:7px}
+  code{font-family:var(--mono);font-size:.86em;background:#131A210A;padding:1px 5px;
+    border:1px solid var(--hair)}
+
+  .titleblock{border-top:1px solid var(--rule);margin-top:48px;
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));font-size:.8rem}
+  .titleblock div{padding:14px 18px 14px 0;border-right:1px solid var(--hair)}
+  .titleblock div:last-child{border-right:0}
+  .titleblock dt{font-family:var(--display);color:var(--muted);margin-bottom:3px}
+  .titleblock dd{margin:0}
+  footer{padding:0 46px 30px;color:var(--muted);font-size:.83rem}
+
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr;gap:30px}
+    .two,.three{grid-template-columns:1fr;gap:22px}
+    .phase{grid-template-columns:26px 1fr;gap:12px}
+    .phase .when{grid-column:2}
+    .mast,.pad,footer{padding-left:22px;padding-right:22px}
+    .titleblock{grid-template-columns:1fr 1fr}
+    body{font-size:16px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* long-form document styles, layered on the shared skin */
+  .doc{max-width:760px}
+  .doc h1{font-size:1.5rem;margin:34px 0 14px;padding-top:26px;border-top:1px solid var(--rule);
+    font-family:var(--display)}
+  .doc h1:first-child{border-top:0;padding-top:0;margin-top:8px}
+  .doc h2{font-size:1.28rem;margin:30px 0 10px}
+  .doc h3{font-size:1.04rem;margin:22px 0 8px}
+  .doc h4{font-size:.95rem;margin:18px 0 6px;font-family:var(--display);color:var(--muted)}
+  .doc p{max-width:68ch}
+  .doc ul,.doc ol{padding-left:22px;max-width:68ch}
+  .doc li{margin-bottom:6px}
+  .doc hr{border:0;border-top:1px solid var(--rule);margin:34px 0}
+  .doc table{margin:18px 0;font-size:.88rem}
+  .doc blockquote{margin:18px 0;padding:2px 0 2px 18px;border-left:3px solid var(--teal);
+    color:var(--muted)}
+  .doc pre{background:#131A2108;border:1px solid var(--hair);padding:14px 16px;overflow-x:auto;
+    font-family:var(--mono);font-size:.82rem;line-height:1.5}
+  .doc pre code{background:none;border:0;padding:0}
+  .doc a{word-break:break-word}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="mast">
+    <span><b>CanSat Bahrain 2026</b> &nbsp;·&nbsp; the plan</span>
+    <span>prepared 12 October 2026</span>
+  </div>
+
+  <div class="pad">
+  <main>
+<div class="doc" style="padding-top:26px"><h1>What the project is, and a plan</h1>
+<p>Source: <em>[CanSat Bahrain – 2026] Guidelines.pdf</em> (10 pages, BSA + AUBH) + the promo infographic.
+Prepared 12 October 2026.</p>
+<hr />
+<h2>1. The project in one paragraph</h2>
+<p>Your team designs, builds, tests and <strong>flies a satellite the size of a soda can</strong>. All the
+subsystems of a real satellite — power, communications, sensors, payload, and a parachute
+recovery system — have to fit inside a 66 mm × 115 mm cylinder (~350 ml). On launch day a BSA
+expert drops it from a tower/high building; it must collect and transmit data on the way down,
+land safely under its parachute, and you then present the mission results to a jury of Bahrain
+Space Agency engineers. It is a compressed version of a real space mission lifecycle:
+concept → requirements → design reviews → integration &amp; test → launch → data analysis → results
+presentation. <strong>Commitment: ~8 hours per week, 25 Oct → 12 Dec 2026</strong> (that is the stated
+figure; expect 15–25 h/week in the last two weeks).</p>
+<hr />
+<h2>2. Hard facts, rules, dates</h2>
+<h3>Eligibility / registration (closes 17 October 2026 — 5 days from now)</h3>
+<ul>
+<li>Team = <strong>exactly 5 university students + 1 supervisor</strong>.</li>
+<li>All students enrolled at a university at registration time.</li>
+<li><strong>Letter of Endorsement signed by the Dean or higher</strong> submitted with the form.</li>
+<li>One registration form per team: https://forms.gle/EsTSdia3MBFAEzPM8</li>
+<li>Contact: events@bsa.bh</li>
+</ul>
+<h3>Timeline</h3>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Item</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4 Oct 2026</td>
+<td>Registration opens</td>
+</tr>
+<tr>
+<td><strong>17 Oct 2026</strong></td>
+<td><strong>Registration + endorsement letter deadline</strong></td>
+</tr>
+<tr>
+<td>25 Oct 2026</td>
+<td>Induction &amp; introductory workshop at AUBH — <strong>and MCR kickoff same day</strong></td>
+</tr>
+<tr>
+<td>28 Oct 2026</td>
+<td><strong>MCR</strong> presentation submission</td>
+</tr>
+<tr>
+<td>1 Nov 2026</td>
+<td>MCR review + PDR kickoff</td>
+</tr>
+<tr>
+<td>11 Nov 2026</td>
+<td><strong>PDR</strong> presentation submission</td>
+</tr>
+<tr>
+<td>15 Nov 2026</td>
+<td>PDR review + CDR kickoff</td>
+</tr>
+<tr>
+<td>18 Nov 2026</td>
+<td><strong>CDR</strong> presentation submission</td>
+</tr>
+<tr>
+<td>22 Nov 2026</td>
+<td>CDR review + SIR/FRR kickoff</td>
+</tr>
+<tr>
+<td>2 Dec 2026</td>
+<td><strong>SIR/FRR</strong> presentation submission</td>
+</tr>
+<tr>
+<td>6 Dec 2026</td>
+<td>Presentation / outreach / pre-flight preparation session</td>
+</tr>
+<tr>
+<td>9 Dec 2026</td>
+<td>Deployment-readiness review, final technical sign-off, <strong>CanSats handed over to organisers</strong></td>
+</tr>
+<tr>
+<td><strong>12 Dec 2026</strong></td>
+<td><strong>Launch campaign + final mission-results presentation + awards</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Note the crunch points: MCR kickoff (25 Oct) → MCR due (28 Oct) is <strong>3 days</strong>; CDR kickoff
+(15 Nov) → CDR due (18 Nov) is <strong>3 days</strong>. Reviews are staged gates: you may be told to fix
+things before the next stage, and SIR/FRR is what authorises you to fly.</p>
+<h3>The kit (free, must be returned if you withdraw)</h3>
+<p>Arduino Nano · RGB camera · BMP180 barometric pressure (I²C) · DHT11 temperature/humidity ·
+6-axis motion sensor (accelerometer+gyro) · 3-axis magnetometer/compass · <strong>RF 433 MHz LoRa
+transmitter</strong> · USB cable · battery case · breadboard.
+Antenna may be mounted externally; everything else stays inside the can.</p>
+<h3>Scoring — this is where your priorities come from</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Scientific value</strong></td>
+<td><strong>35 %</strong></td>
+</tr>
+<tr>
+<td>Technical achievement</td>
+<td>30 %</td>
+</tr>
+<tr>
+<td>Professional competencies (teamwork, communication, <strong>technical reporting</strong>)</td>
+<td>25 %</td>
+</tr>
+<tr>
+<td>Outreach (site, blog, media, promo material)</td>
+<td>10 %</td>
+</tr>
+</tbody>
+</table>
+<p>Awards: Best CanSat Project (overall) · Outstanding Science Mission (best scientific value) ·
+Most Professional Team (best professional competencies). Everyone gets e-certificates.</p>
+<p><strong>Read that table carefully.</strong> Science is the single biggest block, and a quarter of the score is
+"did you present and report this cleanly" — not "did it work". Two thirds of the total is
+achievable by a team that plans, documents and communicates well, even if the flight is imperfect.</p>
+<h3>Deliverables</h3>
+<ol>
+<li><strong>Five milestone presentations</strong> (MCR, PDR, CDR, SIR/FRR, Final Results), each on the official
+   PowerPoint template from <em>Appendix I – Milestones Presentations</em> (Appendix I is referenced in
+   the guidelines but <strong>was not included in the PDF you sent — request it</strong>).</li>
+<li>A <strong>Pre-Launch report</strong> (judged under "technical reporting").</li>
+<li>Pre-launch + post-launch <strong>presentation to the jury</strong>: 7 minutes, all 5 members speak, then
+   ~3 minutes of questions. Prepare ~80 % of it before launch day and leave result placeholders.</li>
+<li><strong>Outreach</strong> evidence: webpage/blog, posts, media coverage, school visits.</li>
+</ol>
+<hr />
+<h2>3. Mission design — what actually wins points</h2>
+<p><strong>Primary mission (the baseline every team does):</strong> measure and transmit the descent profile —
+pressure/altitude, temperature, humidity, IMU attitude, compass heading — plus images during
+descent. Success criterion = complete, correctly-united data set down to landing.</p>
+<p><strong>Secondary mission = your differentiator.</strong> The guidelines explicitly reward (a) creative use of
+the camera and (b) creative additions/enhancements to the kit (better parachute, better 3D model,
+extra components). Pick <strong>one</strong> that produces a <em>measurement</em>, not just a photo:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Why it scores</th>
+<th>Cost / risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A. Parachute aerodynamics study</strong> — two parachute geometries (flat vs hemispherical vs cross), quantify descent rate, oscillation amplitude, rotation rate</td>
+<td>Directly names "improved parachute design" as a reward; cheap; pure engineering science; big data set from kit sensors alone</td>
+<td>Needs 2+ builds and repeat drop tests</td>
+</tr>
+<tr>
+<td><strong>B. Vertical atmospheric profiling over Bahrain</strong> — temperature/humidity/pressure lapse-rate profile, correlations with ground station data</td>
+<td>Clean scientific interest, easy to argue relevance (heat, humidity, dust)</td>
+<td>Science can feel generic; needs good analysis + references</td>
+</tr>
+<tr>
+<td><strong>C. Camera-based ground/aerosol imaging</strong> — stitch descent images into a mosaic, classify surface type / detect haze layers</td>
+<td>Maximises the "creative use of the camera" criterion</td>
+<td>Image handling on a Nano is the hard part</td>
+</tr>
+<tr>
+<td><strong>D. Add an air-quality/gas sensor</strong> (CO₂ or PM2.5) for a vertical pollution profile</td>
+<td>Kit addition + real local relevance + a plot judges can read instantly</td>
+<td>Extra mass/power; sensor must tolerate the thermal environment</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation for a 7-week timeline:</strong> primary = full descent profile telemetry at 1 Hz +
+onboard logging; secondary = <strong>A or D</strong> (A if the team is mechanical/software-strong, D if they
+can get a sensor quickly). Both give a real independent variable, real graphs, and a clean
+"did the mission succeed?" answer. Avoid a secondary mission that is just "take pretty pictures"
+— it scores under camera creativity but contributes little to the 35 % science block.</p>
+<p><strong>Meanwhile, lock the boring things early</strong> (they are 25 % of the score): set up the outreach page
+in week 1, keep a decision log and a test log with dates, and label every graph with units.</p>
+<hr />
+<h2>4. Technical architecture</h2>
+<pre><code>        +---------------------------------------------------+
+        |  CanSat (66 mm dia x 115 mm, ~350 ml)             |
+        |                                                   |
+  [RGB camera] --serial--&gt; +-------------+                  |
+  [BMP180]  --I2C--&gt;        | Arduino   |  --UART--&gt; [433 MHz LoRa TX] ---)) antenna (external)
+  [DHT11]   --digital-&gt;     | Nano      |                        |
+  [6-axis IMU] --I2C-&gt;      | (ATmega328P)                       |
+  [magnetometer] --I2C-&gt;    +------+------+                        v
+                            |  microSD module  &lt;-- ADD THIS    Ground station: 433 MHz LoRa RX
+                            |  (onboard backup log)            + Arduino/PC + laptop logging at 1 Hz
+                            +---+-------------------------------+
+                                |
+                          [battery: 1S LiPo / AA pack]
+                                |
+                         [parachute recovery system]
+</code></pre>
+<p>Non-negotiable design decisions to make at MCR stage:
+1. <strong>Telemetry at 1 Hz + onboard SD logging.</strong> Never trust the radio link alone; a lost packet
+   must not mean a lost mission. (A microSD module is a few dollars — an explicit "kit addition".)
+2. <strong>Ground station receiver.</strong> The kit lists a LoRa <em>transmitter</em> only. Confirm with the
+   organisers whether a matched receiver is provided; if not, budget for the same 433 MHz module
+   plus an Arduino/PC on the ground, and test range before flight.
+3. <strong>Power budget &amp; mass budget</strong> — spreadsheet from day one. The Nano's 2 KB RAM and 32 KB flash
+   constrain the code; images must be streamed/stored, never buffered in RAM.
+4. <strong>Camera interface is the #1 unknown.</strong> A Nano cannot drive a normal parallel/MIPI camera.
+   Get the exact module model from the organisers at the 25 Oct workshop and design around it.
+5. <strong>Recovery system</strong> — parachute sized for a target descent rate (design for ~4–7 m/s), with a
+   shock cord and a container that ejects cleanly. Test with repeated drops from a height (school
+   building, drone, crane) — at minimum 5 successful drops before 2 Dec.</p>
+<p><strong>Top risks:</strong> camera/Nano integration; LoRa range and antenna placement inside a metal-free
+envelope; battery voltage sag under camera load; parachute tangling; timeline compression at
+CDR; data corrupted by vibration. Mitigate each with a bench test you can point to in a review.</p>
+<hr />
+<h2>5. Team of five — suggested role split</h2>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Owns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Systems lead (PM)</strong></td>
+<td>Schedule, interfaces between subsystems, owns the 5 review decks, decision log</td>
+</tr>
+<tr>
+<td><strong>Payload/software</strong></td>
+<td>Arduino firmware, telemetry protocol, logging, ground-station software, data pipeline</td>
+</tr>
+<tr>
+<td><strong>Hardware/electronics</strong></td>
+<td>PCB/breadboard, wiring harness, power budget, sensor calibration, integration</td>
+</tr>
+<tr>
+<td><strong>Mechanical</strong></td>
+<td>Can structure, 3D model, camera mount, parachute design + drop tests, mass budget</td>
+</tr>
+<tr>
+<td><strong>Science &amp; outreach</strong></td>
+<td>Mission objectives &amp; success criteria, analysis + graphs, references, report, webpage/blog/media, presentation visuals</td>
+</tr>
+</tbody>
+</table>
+<p>Every member speaks in the final 7-minute presentation. The <strong>supervisor</strong> is the sixth person:
+they sign off reviews, get the Dean's endorsement, and open doors on campus for test drops.</p>
+<hr />
+<h2>6. "Can I use AI for it?"</h2>
+<p>Straight answer: <strong>yes — the guidelines contain no restriction on AI or CAD/EDA/software tools,
+and the judges are grading the result and your understanding of it, not your editor history.</strong> But
+the way AI helps and the way it hurts are both easy to predict here:</p>
+<p><strong>Where AI genuinely helps (use it, no hesitation)</strong>
+- Learning the sensors fast: "explain the BMP180 I²C register map and give me a working Arduino
+  read function", datasheet triage, unit conversions, I²C address conflicts.
+- Code: Arduino firmware scaffolding, telemetry packet format, CRC, SD logging, Python analysis
+  scripts (pandas/matplotlib with correct axis labels and units), ground-station code.
+- Mechanical: OpenSCAD/parametric can structure, parachute sizing maths, drag/descent-rate calcs.
+- Documents and decks: turning your own notes into a review-ready structure, editing the Pre-Launch
+  report, checking that every graph has units, building the outreach page.
+- Rehearsal: generating the hostile judge questions for each review is one of the highest-value
+  uses — 3 minutes of Q&amp;A is graded.</p>
+<p><strong>Where AI will cost you marks if you lean on it</strong>
+- <strong>35 % of the score is scientific value, and "scientific understanding" is explicitly judged in
+  the Q&amp;A.</strong> A jury of BSA engineers will ask why you chose an equation or a filter. If nobody on
+  the team can derive it, that block collapses.
+- <strong>25 % is "professional competencies", including technical reporting.</strong> A report you cannot
+  defend is worth less than a simpler report you can.
+- <strong>AI cannot solder, fit, test, drop, fly or recover.</strong> At 8 h/week the schedule is the binding
+  constraint, and no model shortens a physical test campaign.
+- <strong>AI will confidently produce wrong science</strong> (fabricated units, invented constants, plausible
+  but wrong datasheet values). Every AI-sourced number must be checked against the datasheet or a
+  textbook before it enters a review deck.
+- School rules still apply: check the university's academic-integrity policy and your supervisor's
+  stance on AI-assisted work, and disclose its use if asked. Using AI is normal engineering;
+  misrepresenting someone else's work as your own is not.</p>
+<p><strong>Working rule:</strong> use AI for typing, formatting, boilerplate, translation of jargon and rehearsal.
+Keep the reasoning, the mission objectives, the design justification and the physical build inside
+the team — and make sure someone can explain every design decision without notes.</p>
+<hr />
+<h2>7. Week-by-week plan (Mon 12 Oct → Sat 12 Dec 2026)</h2>
+<p><strong>Week 0 — by Fri 17 Oct: REGISTER (hard deadline)</strong>
+Recruit the exact 5 + supervisor · draft mission theme bullets for the Dean · get the Letter of
+Endorsement signed · submit the Google Form · email events@bsa.bh for Appendix I templates, the
+exact camera module model, and whether a LoRa ground receiver is supplied.</p>
+<p><strong>Week 1 (18–24 Oct): build the ground base</strong>
+Create the shared drive, decision log, mass/power budget, outreach page. Assign the 5 roles.
+Read all sensor datasheets. Start the mission-concept narrative (why this mission matters).</p>
+<p><strong>Week 2 (25–28 Oct): MCR — due 28 Oct</strong>
+Workshop on 25 Oct (get the kit, confirm camera + LoRa). Objective: freeze the mission
+statement, primary &amp; secondary objectives, success criteria, top-level requirements, and a
+concept block diagram. Rehearse 3 min of Q&amp;A.</p>
+<p><strong>Weeks 3–4 (29 Oct – 11 Nov): PDR + first hardware</strong>
+Breadboard the full sensor chain on the Nano. Working telemetry to a PC. Pixel-level design of
+the mechanical structure, parachute sizing, power and mass budgets. First drop tests with a dummy.
+Write the requirements-to-design traceability table. <strong>PDR deck due 11 Nov.</strong></p>
+<p><strong>Weeks 5–6 (12–18 Nov): CDR — freeze the design</strong>
+Full schematic + functional block diagram + mechanical drawings. Firmware feature-complete on
+breadboard, data pipeline producing real plots. Test plan written (bench, drop, range, thermal).
+<strong>CDR deck due 18 Nov.</strong> Stop changing architecture after this review.</p>
+<p><strong>Weeks 7–8 (19 Nov – 2 Dec): integration &amp; test, SIR/FRR</strong>
+Solder the flight board, fit everything into the can envelope, weigh it, run the test campaign:
+≥5 drop tests, LoRa range test, end-to-end mission simulation (drop → log → plot). Fix everything
+the tests break. <strong>SIR/FRR deck + Pre-Launch report due 2 Dec.</strong> This is the gate to fly.</p>
+<p><strong>Week 9 (3–9 Dec): flight readiness</strong>
+6 Dec session; 7–8 Dec full dress rehearsal with the final CanSat, fresh battery, spares kit.
+Final results presentation pre-built with placeholders (launch results, plots, conclusions,
+challenges, lessons learned, outreach summary). <strong>9 Dec: sign-off + hand over the CanSat.</strong></p>
+<p><strong>Week 10 — 12 Dec: LAUNCH</strong>
+Arrive with the CanSat flight-ready, spare parts, printed checksheets and half the deck already
+done. Fly, recover, fill in the plots within the hour, present in launch order, 7 min + Q&amp;A.</p>
+<hr />
+<h2>8. Open questions to send to events@bsa.bh now</h2>
+<ol>
+<li>Appendix I – Milestones Presentations: please share the templates and detailed requirements.</li>
+<li>Which exact RGB camera module is in the kit, and what interface (serial/UART, SPI, I²C)?</li>
+<li>The kit lists a 433 MHz LoRa <strong>transmitter</strong> — is a matched ground-station receiver provided,
+   and are there any constraints on antennas?</li>
+<li>Launch site, tower height, and expected drop altitude.</li>
+<li>Are there mass or dimension limits beyond the can envelope, and any battery chemistry rules?</li>
+<li>Is onboard data logging required in addition to telemetry, and what sample rate is expected?</li>
+<li>Can a sixth student join as a reserve, or is exactly five strict?</li>
+<li>Is there a rubric with sub-scores for the marking scheme (Table 3), so we can weight our work?</li>
+</ol></div>
+  </main>
+  </div>
+  <footer>
+    <p style="margin-top:14px"><a href="index.html">Back to the mission brief</a></p>
+  </footer>
+</div>
+</body>
+</html>

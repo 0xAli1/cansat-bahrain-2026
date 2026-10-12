@@ -1,0 +1,27 @@
+CanSat Bahrain 2026 - simulated mission results
+========================================================
+packets_decoded                    208
+flight_time_s                      47.4
+release_altitude_m                 250.0
+apogee_measured_m                  250.13
+deploy_time_s                      2.8
+deploy_timer_s                     2.0
+peak_freefall_rate_mps             -12.56
+mean_terminal_descent_mps          4.99
+design_descent_target_mps          5.0
+chute_diameter_m                   0.579
+chute_area_m2                      0.2637
+measured_lapse_rate_C_per_100m     -0.386
+isa_lapse_rate_C_per_100m          -0.65
+temp_min_c                         29.0
+temp_max_c                         32.0
+hum_max_pct                        74.0
+heading_deg                        132.5
+wind_drift_m                       115.3
+crc_errors_rejected                5
+packets_lost_over_air              25
+bits_flipped_in_transit            5
+sequence_gaps                      25
+link_success_rate_pct              87.4
+
+7242 bytes on the wire, 208 packets decoded

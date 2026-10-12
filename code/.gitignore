@@ -1,0 +1,8 @@
+telemetry.bin
+telemetry_decoded.csv
+mission_summary.txt
+mission_data.json
+flight_replay.html
+flight_replay_script.js
+figures/
+__pycache__/
