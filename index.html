@@ -68,8 +68,13 @@
   .score{display:flex;height:44px;border:1px solid var(--rule);margin:22px 0 14px;
     font-family:var(--display);font-size:.83rem;overflow:hidden}
   .score span{display:flex;align-items:center;padding:0 12px;color:#fff;white-space:nowrap;
-    border-right:1px solid #ffffff40}
+    min-width:0;border-right:1px solid #ffffff40}
   .score span:last-child{border-right:0;color:var(--ink)}
+  .scorelegend{display:none;margin:0 0 14px}
+  .scorelegend div{display:flex;justify-content:space-between;gap:14px;padding:7px 0;
+    border-bottom:1px solid var(--hair);font-size:.9rem}
+  .scorelegend b{font-family:var(--display);font-weight:600}
+  .scorelegend i{font-style:normal;font-family:var(--mono);font-size:.82rem;color:var(--muted)}
   .score .s1{background:var(--teal);flex:35}
   .score .s2{background:#3E8F8C;flex:30}
   .score .s3{background:var(--blue);flex:25}
@@ -99,9 +104,7 @@
   figure.plot{margin:26px 0 0}
   figure.plot img{width:100%;height:auto;border:1px solid var(--hair);display:block}
   figure.plot figcaption{font-size:.83rem;color:var(--muted);padding-top:8px}
-  .replay{margin:26px 0 0;border:1px solid var(--hair);background:var(--paper);padding:20px;
-    display:flex;justify-content:center}
-  .replay iframe{width:700px;max-width:100%;height:560px;border:0;background:transparent}
+  .replay{margin:30px 0 0;border:1px solid var(--hair);background:var(--paper);padding:20px}
 
   .note{border-left:3px solid var(--teal);padding:2px 0 2px 18px;margin:24px 0;font-size:.94rem}
   .note.warn{border-left-color:var(--amber)}
@@ -121,11 +124,39 @@
   @media (max-width:900px){
     .hero{grid-template-columns:1fr;gap:30px}
     .two,.three{grid-template-columns:1fr;gap:22px}
-    .phase{grid-template-columns:26px 1fr;gap:12px}
-    .phase .when{grid-column:2}
+    .phase{grid-template-columns:26px 1fr;row-gap:3px;column-gap:14px}
+    .phase .n{grid-row:1 / span 2}
+    .phase .when{grid-column:2;grid-row:1}
+    .phase > div:last-child{grid-column:2;grid-row:2}
     .mast,.pad,footer{padding-left:22px;padding-right:22px}
+    .mast{flex-wrap:wrap;row-gap:3px}
     .titleblock{grid-template-columns:1fr 1fr}
     body{font-size:16px}
+  }
+  @media (max-width:640px){
+    /* the four scoring labels cannot fit across a phone: keep the proportional
+       bar, move the names+values into a legend underneath */
+    .score{height:26px;margin-bottom:10px}
+    .score span{padding:0;font-size:0}
+    .scorelegend{display:block}
+    /* the results table becomes one block per measurement */
+    table.mission thead{display:none}
+    table.mission,table.mission tbody,table.mission tr,table.mission td{display:block}
+    table.mission tr{display:grid;grid-template-columns:1fr auto;padding:11px 0;
+      border-bottom:1px solid var(--hair)}
+    table.mission td{border:0;padding:0}
+    table.mission td.num{text-align:right;padding-left:14px}
+    table.mission td.num::before{content:"value ";font-family:var(--display);font-size:.7rem;
+      color:var(--muted);vertical-align:1px}
+    table.mission td:last-child{grid-column:1 / -1;font-size:.85rem;color:var(--muted);
+      margin-top:5px;line-height:1.5}
+    .spec dl{grid-template-columns:1fr}
+    .spec dt{padding-bottom:0;border-bottom:0}
+    .spec dd{padding-top:2px}
+    .replay{padding:4px 0;border-left:0;border-right:0}
+    .titleblock{grid-template-columns:1fr}
+    .titleblock div{border-right:0;border-bottom:1px solid var(--hair)}
+    h1{font-size:1.95rem}
   }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -272,6 +303,12 @@
         <span class="s3">Professional 25%</span>
         <span class="s4">Outreach 10%</span>
       </div>
+      <div class="scorelegend" aria-hidden="true">
+        <div><b>Scientific value</b><i>35%</i></div>
+        <div><b>Technical achievement</b><i>30%</i></div>
+        <div><b>Professional competencies</b><i>25%</i></div>
+        <div><b>Outreach</b><i>10%</i></div>
+      </div>
       <div class="scorewhy">
         <p style="margin:0"><b>Scientific value, the largest single block.</b> Whether your
         objectives are worth answering, whether your measurements actually answer them, and whether
@@ -340,7 +377,7 @@
       back by a ground station with checksums. <strong>Every number below came out of that
       decoding — not out of the simulation's own notes.</strong></p>
 
-      <table>
+      <table class="mission">
         <caption>Mission results, decoded from 208 received packets</caption>
         <thead><tr><th>Measurement</th><th class="num">Value</th><th>Why it matters</th></tr></thead>
         <tbody>
@@ -390,12 +427,233 @@
       </figure>
 
       <div class="replay">
-        <iframe src="replay.html" title="Interactive replay of the simulated CanSat flight"
-                loading="lazy"></iframe>
+<style>
+  .wrap { width: 100%; max-width: 700px; color: var(--foreground, #131A21); }
+  .title { font-family: var(--display, "Bahnschrift", "Arial Narrow", sans-serif);
+           font-size: 15px; font-weight: 600; margin: 0 0 2px 0; }
+  .sub { font-size: 11.5px; color: var(--muted-foreground, #5A6672); margin-bottom: 10px; }
+  .row { display: flex; gap: 12px; align-items: flex-start; }
+  .track { position: relative; width: 54px; height: 200px; flex: 0 0 auto;
+           border: 1px solid var(--border, #C6CDD4); border-radius: 8px;
+           overflow: hidden; background: var(--card, #FDFDFC); }
+  .track .fill { position: absolute; left: 0; right: 0; top: 0;
+                 background: linear-gradient(180deg, #0F6E6B11, #0F6E6B22); }
+  .track .can { position: absolute; left: 50%; width: 20px; height: 30px; margin-left: -10px;
+                border: 2px solid #C4541F; border-radius: 5px;
+                background: var(--card, #FDFDFC); }
+  .track .can.chute::after { content: ""; position: absolute; left: 50%; top: -13px;
+                width: 26px; height: 11px; margin-left: -13px;
+                border-radius: 13px 13px 3px 3px;
+                background: #C4541F44; border: 1.5px solid #C4541F; }
+  .readout { flex: 1 1 auto; min-width: 0; display: grid;
+             grid-template-columns: 1fr 1fr; gap: 5px 12px; align-content: start; }
+  .kv { border-bottom: 1px solid var(--border, #C6CDD4); padding: 3px 0; min-width: 0; }
+  .k { font-size: 10.5px; color: var(--muted-foreground, #5A6672); letter-spacing: .02em;
+       text-transform: uppercase; }
+  .v { font-size: 17px; font-weight: 600; font-family: ui-monospace, Menlo, monospace;
+       font-variant-numeric: tabular-nums; }
+  canvas { display: block; width: 100%; height: 150px; margin-top: 10px;
+           border: 1px solid var(--border, #C6CDD4); border-radius: 8px;
+           background: var(--card, #FDFDFC); }
+  .bar { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  button, .pill { font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 999px;
+           border: 1px solid var(--border, #C6CDD4); background: transparent;
+           color: var(--foreground, #131A21); cursor: pointer; white-space: nowrap; }
+  button:hover { background: var(--accent, #E3E8EC); }
+  input[type=range] { flex: 1 1 140px; min-width: 0; accent-color: #0F6E6B; }
+  .stat { font-size: 11px; color: var(--muted-foreground, #5A6672); margin-top: 8px; }
+  .badge { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 10.5px;
+           border: 1px solid var(--border, #C6CDD4); margin: 0 5px 4px 0; }
+  .hint { font-size: 11.5px; color: var(--muted-foreground, #5A6672); margin: 10px 0 0;
+          max-width: 62ch; }
+  .hint code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px;
+               word-break: break-all; }
+  @media (max-width: 560px) {
+    .track { width: 42px; height: 140px; }
+    .track .can { height: 24px; }
+    canvas { height: 118px; }
+    .v { font-size: 15px; }
+    .k { font-size: 9.5px; }
+    .readout { gap: 3px 10px; }
+    .sub { margin-bottom: 8px; }
+  }
+</style>
+<div class="wrap">
+  <div class="title">Simulated mission &mdash; Live flight replay</div>
+  <div class="sub">Decoded from 208 telemetry packets &middot; 47.4 s of flight &middot;
+    87.4% link success through 12% loss + CRC rejects</div>
+
+  <div class="row">
+    <div class="track" id="track">
+      <div class="fill" id="fill"></div>
+      <div class="can" id="can"></div>
+    </div>
+    <div class="readout">
+      <div class="kv"><div class="k">Mission time</div><div class="v"><span id="r_t">0.0</span> s</div></div>
+      <div class="kv"><div class="k">Altitude</div><div class="v"><span id="r_alt">0</span> m</div></div>
+      <div class="kv"><div class="k">Descent rate</div><div class="v"><span id="r_des">0.0</span> m/s</div></div>
+      <div class="kv"><div class="k">Temperature</div><div class="v"><span id="r_temp">0</span> &deg;C</div></div>
+      <div class="kv"><div class="k">Humidity</div><div class="v"><span id="r_hum">0</span> %</div></div>
+      <div class="kv"><div class="k">Phase</div><div class="v" id="r_phase"
+        style="color:#C4541F">free fall</div></div>
+    </div>
+  </div>
+
+  <canvas id="chart"></canvas>
+
+  <div class="bar">
+    <button id="play">&#9654; Play</button>
+    <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Flight position">
+    <span class="pill" id="clock">0.0 s</span>
+  </div>
+  <div class="stat">
+    <span class="badge">deploy 2.8 s</span>
+    <span class="badge">terminal 4.99 m/s</span>
+    <span class="badge">chute 0.579 m</span>
+    <span class="badge">CRC rejected 5</span>
+  </div>
+  <p class="hint">Change the release altitude, the deployment timer or the canopy size in
+  <code>code/cansat_mission_demo.py</code> and re-run it &mdash; the telemetry, the figures and
+  this replay are all rebuilt from that single run.</p>
+</div>
+<script>
+
+const DATA = {"summary": {"packets_decoded": 208, "flight_time_s": 47.4, "release_altitude_m": 250.0, "apogee_measured_m": 250.13, "deploy_time_s": 2.8, "deploy_timer_s": 2.0, "peak_freefall_rate_mps": -12.56, "mean_terminal_descent_mps": 4.99, "design_descent_target_mps": 5.0, "chute_diameter_m": 0.579, "chute_area_m2": 0.2637, "measured_lapse_rate_C_per_100m": -0.386, "isa_lapse_rate_C_per_100m": -0.65, "temp_min_c": 29.0, "temp_max_c": 32.0, "hum_max_pct": 74.0, "heading_deg": 132.5, "wind_drift_m": 115.3, "crc_errors_rejected": 5, "packets_lost_over_air": 25, "bits_flipped_in_transit": 5, "sequence_gaps": 25, "link_success_rate_pct": 87.4}, "series": {"t": [0.0, 0.2, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.4, 3.6, 3.8, 4.0, 4.2, 4.4, 4.8, 5.0, 5.2, 5.4, 5.8, 6.0, 6.2, 6.4, 6.6, 6.8, 7.4, 7.6, 7.8, 8.0, 8.2, 8.4, 8.6, 8.8, 9.0, 9.2, 9.4, 9.6, 9.8, 10.0, 10.2, 10.4, 10.6, 10.8, 11.0, 11.4, 11.6, 11.8, 12.0, 12.2, 12.4, 12.6, 12.8, 13.0, 13.2, 13.6, 13.8, 14.0, 14.2, 14.4, 14.6, 14.8, 15.0, 15.2, 15.4, 15.8, 16.0, 16.2, 16.4, 16.6, 16.8, 17.0, 17.2, 17.4, 17.6, 17.8, 18.0, 18.4, 18.6, 18.8, 19.0, 19.2, 19.4, 19.6, 20.0, 20.2, 20.4, 20.6, 21.0, 21.2, 21.6, 21.8, 22.0, 22.2, 22.4, 22.6, 22.8, 23.0, 23.2, 23.4, 23.6, 23.8, 24.0, 24.2, 24.4, 24.6, 24.8, 25.0, 25.2, 25.4, 25.6, 25.8, 26.0, 26.2, 26.6, 26.8, 27.0, 27.2, 27.4, 27.6, 27.8, 28.0, 28.2, 28.4, 28.6, 28.8, 29.2, 29.6, 29.8, 30.0, 30.2, 30.4, 30.6, 30.8, 31.2, 31.4, 31.6, 31.8, 32.2, 32.4, 32.6, 33.2, 33.4, 33.6, 33.8, 34.0, 34.2, 34.4, 34.6, 34.8, 35.2, 35.4, 35.6, 36.0, 36.2, 36.4, 36.6, 36.8, 37.0, 37.2, 37.4, 37.6, 38.6, 39.0, 39.2, 39.4, 39.6, 39.8, 40.0, 40.2, 40.4, 40.6, 40.8, 41.0, 41.2, 41.4, 41.6, 41.8, 42.0, 42.2, 42.4, 42.6, 42.8, 43.0, 43.2, 43.6, 43.8, 44.0, 44.2, 44.4, 44.8, 45.0, 45.2, 45.4, 45.6, 45.8, 46.0, 46.2, 46.4, 46.6, 46.8, 47.0, 47.2, 47.4], "alt": [249.7, 250.13, 247.74, 246.55, 245.53, 243.31, 239.31, 237.69, 230.79, 228.15, 227.13, 225.01, 225.01, 223.13, 221.6, 220.07, 220.07, 218.88, 216.5, 215.91, 213.7, 213.44, 211.91, 210.22, 209.03, 208.01, 207.75, 205.54, 205.46, 204.36, 200.96, 200.03, 199.01, 197.99, 196.97, 195.28, 195.45, 193.92, 193.24, 191.88, 190.87, 189.76, 189.0, 188.15, 187.65, 185.27, 185.44, 184.09, 183.07, 181.12, 180.19, 178.83, 178.24, 176.89, 175.62, 174.43, 173.58, 172.82, 172.4, 168.93, 168.85, 166.98, 166.9, 165.29, 163.94, 163.94, 162.67, 162.0, 160.73, 158.53, 158.44, 156.5, 156.42, 155.49, 152.7, 151.85, 152.11, 151.52, 149.57, 148.22, 146.7, 145.27, 144.09, 142.99, 142.4, 141.72, 140.37, 139.87, 137.25, 136.66, 134.97, 133.54, 133.37, 130.84, 129.66, 128.4, 127.47, 126.12, 124.61, 124.02, 123.18, 122.75, 121.24, 119.97, 119.72, 119.13, 117.87, 116.86, 116.1, 114.25, 112.99, 113.16, 110.21, 110.3, 109.37, 107.77, 107.44, 106.68, 103.48, 103.4, 101.72, 101.05, 99.95, 99.62, 98.52, 97.18, 96.0, 95.67, 94.74, 93.4, 91.13, 89.62, 88.36, 87.35, 86.43, 85.26, 84.42, 83.41, 80.22, 80.22, 79.47, 78.46, 75.69, 75.78, 73.93, 71.58, 70.08, 69.74, 67.98, 67.81, 66.39, 65.13, 64.55, 62.95, 61.03, 59.61, 59.94, 57.93, 56.09, 54.42, 53.83, 52.83, 51.99, 50.48, 50.65, 49.4, 44.71, 43.04, 41.7, 40.53, 38.61, 38.45, 37.28, 36.61, 34.85, 33.27, 32.1, 31.85, 30.01, 29.18, 28.76, 28.09, 27.84, 25.5, 24.59, 24.59, 22.92, 22.42, 20.83, 18.33, 17.91, 17.08, 15.33, 14.08, 12.24, 11.16, 9.91, 10.41, 8.99, 7.24, 7.33, 5.83, 4.25, 3.66, 3.0, 2.25, 1.25, 0.33], "temp": [30.0, 30.0, 30.0, 29.0, 30.0, 31.0, 30.0, 30.0, 31.0, 30.0, 30.0, 30.0, 31.0, 30.0, 30.0, 30.0, 30.0, 31.0, 31.0, 30.0, 30.0, 30.0, 31.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 31.0, 30.0, 30.0, 31.0, 30.0, 30.0, 30.0, 31.0, 30.0, 31.0, 31.0, 30.0, 31.0, 30.0, 31.0, 30.0, 31.0, 30.0, 30.0, 30.0, 30.0, 30.0, 31.0, 30.0, 31.0, 30.0, 30.0, 31.0, 30.0, 30.0, 31.0, 30.0, 30.0, 31.0, 30.0, 30.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 30.0, 31.0, 30.0, 31.0, 31.0, 30.0, 31.0, 30.0, 31.0, 30.0, 31.0, 30.0, 31.0, 31.0, 30.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 30.0, 31.0, 30.0, 31.0, 31.0, 31.0, 31.0, 31.0, 30.0, 31.0, 31.0, 31.0, 30.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 30.0, 30.0, 31.0, 31.0, 30.0, 30.0, 31.0, 30.0, 31.0, 31.0, 31.0, 31.0, 30.0, 31.0, 32.0, 31.0, 30.0, 31.0, 31.0, 30.0, 31.0, 31.0, 30.0, 31.0, 31.0, 30.0, 31.0, 31.0, 32.0, 31.0, 31.0, 31.0, 31.0, 31.0, 32.0, 31.0, 31.0, 31.0, 31.0, 30.0, 32.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 30.0, 31.0, 31.0, 31.0, 32.0, 32.0, 31.0, 31.0, 31.0, 31.0, 31.0, 30.0, 31.0, 32.0, 31.0, 31.0, 31.0, 31.0, 30.0, 31.0, 31.0, 31.0, 31.0, 32.0, 31.0, 31.0, 31.0, 31.0, 31.0, 30.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 31.0, 30.0, 31.0], "hum": [61.0, 60.0, 62.0, 63.0, 62.0, 63.0, 65.0, 65.0, 66.0, 66.0, 65.0, 66.0, 68.0, 68.0, 66.0, 66.0, 67.0, 67.0, 67.0, 66.0, 68.0, 68.0, 68.0, 69.0, 67.0, 70.0, 67.0, 67.0, 67.0, 67.0, 69.0, 68.0, 66.0, 69.0, 69.0, 70.0, 70.0, 70.0, 67.0, 69.0, 71.0, 70.0, 71.0, 69.0, 70.0, 70.0, 68.0, 70.0, 68.0, 69.0, 69.0, 68.0, 70.0, 69.0, 69.0, 69.0, 68.0, 68.0, 72.0, 69.0, 70.0, 69.0, 70.0, 69.0, 71.0, 69.0, 70.0, 69.0, 69.0, 72.0, 69.0, 70.0, 70.0, 71.0, 70.0, 69.0, 71.0, 69.0, 73.0, 69.0, 70.0, 71.0, 71.0, 70.0, 69.0, 70.0, 70.0, 70.0, 72.0, 72.0, 72.0, 69.0, 71.0, 72.0, 72.0, 68.0, 69.0, 70.0, 72.0, 71.0, 71.0, 71.0, 70.0, 70.0, 70.0, 68.0, 71.0, 70.0, 68.0, 70.0, 71.0, 72.0, 71.0, 70.0, 70.0, 71.0, 72.0, 70.0, 71.0, 72.0, 70.0, 72.0, 70.0, 69.0, 70.0, 71.0, 69.0, 70.0, 72.0, 70.0, 70.0, 70.0, 71.0, 71.0, 70.0, 70.0, 70.0, 72.0, 74.0, 70.0, 69.0, 70.0, 71.0, 71.0, 69.0, 70.0, 71.0, 70.0, 70.0, 71.0, 70.0, 71.0, 70.0, 71.0, 71.0, 69.0, 72.0, 70.0, 73.0, 71.0, 69.0, 72.0, 71.0, 70.0, 70.0, 70.0, 72.0, 73.0, 70.0, 73.0, 71.0, 70.0, 72.0, 71.0, 72.0, 71.0, 71.0, 71.0, 72.0, 70.0, 72.0, 70.0, 70.0, 71.0, 72.0, 72.0, 73.0, 71.0, 71.0, 69.0, 70.0, 71.0, 71.0, 70.0, 70.0, 71.0, 72.0, 71.0, 71.0, 71.0, 72.0, 71.0, 71.0, 71.0, 70.0, 70.0, 73.0, 70.0], "descent": [-2.514, -3.741, -4.709, -6.876, -10.952, -12.564, -11.267, -11.119, -10.631, -10.156, -10.945, -9.12, -6.163, -5.08, -4.849, -5.041, -6.286, -6.223, -5.086, -5.146, -5.193, -5.193, -4.951, -4.684, -4.55, -4.707, -6.034, -6.216, -4.407, -4.325, -4.465, -4.455, -6.196, -5.879, -5.334, -5.014, -5.045, -4.954, -4.984, -4.832, -4.968, -4.996, -4.904, -4.979, -4.962, -5.234, -5.598, -4.527, -4.623, -4.696, -4.67, -5.929, -5.718, -5.354, -5.473, -5.563, -5.789, -4.789, -4.643, -4.763, -4.737, -5.695, -5.438, -4.968, -4.952, -5.057, -5.162, -4.311, -4.141, -4.491, -4.697, -5.675, -5.629, -5.205, -5.084, -5.507, -5.598, -5.746, -5.911, -4.776, -4.836, -4.849, -4.521, -5.455, -5.38, -5.411, -4.619, -4.666, -4.966, -5.279, -5.277, -5.397, -4.417, -4.264, -5.189, -4.97, -5.866, -5.55, -5.22, -4.995, -4.739, -4.559, -4.348, -4.393, -4.663, -4.811, -4.854, -5.259, -5.363, -5.454, -5.77, -5.393, -5.168, -5.559, -5.287, -5.604, -4.77, -4.504, -4.649, -4.589, -5.375, -5.3, -4.984, -4.654, -4.698, -4.893, -5.402, -5.85, -4.98, -4.239, -4.308, -4.327, -5.06, -6.354, -6.114, -5.918, -4.77, -4.794, -4.866, -5.094, -5.19, -5.271, -5.427, -3.979, -4.551, -4.462, -4.351, -5.911, -5.777, -5.655, -5.579, -5.729, -4.773, -4.82, -5.071, -4.375, -5.213, -5.01, -4.914, -5.814, -5.545, -5.918, -6.155, -6.843, -3.847, -3.591, -3.703, -3.782, -6.327, -7.252, -6.579, -5.92, -5.68, -5.725, -5.666, -5.563, -5.562, -5.025, -4.757, -4.652, -4.413, -4.561, -4.514, -4.514, -5.245, -5.482, -5.691, -4.839, -4.743, -5.113, -5.421, -6.627, -5.11, -4.811, -4.586, -4.347, -5.239, -5.029, -4.7, -4.818, -4.877, -4.712, -4.846, -4.505, -4.002, -3.527, -3.036, -2.589]}};
+const S = DATA.series, SUM = DATA.summary;
+const t = S.t, alt = S.alt, temp = S.temp, hum = S.hum, des = S.descent;
+const n = t.length, TEND = t[n-1], ALTMAX = Math.max(...alt);
+const TERM = Math.abs(SUM.mean_terminal_descent_mps);
+const DEPLOY_IDX = (() => {
+  let lowest = Infinity;
+  for (let i=0;i<n;i++){
+    if (des[i] < lowest) lowest = des[i];
+    if (des[i] > -1.3*TERM && lowest < -2*TERM) return i;
+  }
+  return 0;
+})();
+
+const cv = document.getElementById('chart'), cx = cv.getContext('2d');
+const track = document.getElementById('track'), fill = document.getElementById('fill');
+const can = document.getElementById('can');
+const SPEED = 1.6;                     // playback speed multiplier
+let idx = 0, playing = false, last = 0, cursor = 0, W = 700, H = 150;
+
+function css(v, fb){ const g = getComputedStyle(document.body).getPropertyValue(v).trim();
+  return g || fb; }
+const C = { grid: 'rgba(19,26,33,.12)', text: css('--muted-foreground','#5A6672'),
+            acc:'#0F6E6B', amber:'#C4541F', fg: css('--foreground','#131A21'),
+            blue:'#1F5C9E' };
+
+// size the backing store from the layout box, so the chart is sharp and correct
+// at any viewport width (320 px phone through 4K desktop)
+function sizeCanvas(){
+  const dpr = window.devicePixelRatio || 1;
+  const box = cv.getBoundingClientRect();
+  W = Math.max(240, Math.round(box.width));
+  H = Math.max(80, Math.round(box.height));
+  cv.width = Math.round(W * dpr);
+  cv.height = Math.round(H * dpr);
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function y(v, min, max, h, pad){ return pad + (max - v)/(max-min) * (h - 2*pad); }
+
+function draw(){
+  const pad = 20;
+  cx.clearRect(0, 0, W, H);
+  cx.strokeStyle = C.grid; cx.lineWidth = 1;
+  for (let g=0; g<=4; g++){ const gy = pad + g*(H-2*pad)/4;
+    cx.beginPath(); cx.moveTo(pad,gy); cx.lineTo(W-pad,gy); cx.stroke(); }
+
+  const dmin = Math.min(...des), dmax = 0;
+
+  // axis values, so the chart reads quantitatively and not just as a trend
+  cx.fillStyle = C.text; cx.font = '10px system-ui';
+  cx.fillText('0', 2, pad + 9);
+  cx.fillText(String(Math.round(dmin)), 2, H - pad + 4);
+
+  cx.strokeStyle = C.amber; cx.lineWidth = 1.6; cx.beginPath();
+  for (let i=0;i<n;i++){ const x = pad + (t[i]/TEND)*(W-2*pad);
+    const py = y(des[i], dmin, dmax, H, pad); i?cx.lineTo(x,py):cx.moveTo(x,py); }
+  cx.stroke();
+
+  const tmin = Math.min(...temp), tmax = Math.max(...temp);
+  cx.strokeStyle = C.blue; cx.lineWidth = 1.4; cx.beginPath();
+  for (let i=0;i<n;i++){ const x = pad + (t[i]/TEND)*(W-2*pad);
+    const py = y(temp[i], tmin, tmax, H*0.55, pad); i?cx.lineTo(x,py):cx.moveTo(x,py); }
+  cx.stroke();
+
+  const dx = pad + (t[DEPLOY_IDX]/TEND)*(W-2*pad);
+  cx.strokeStyle = C.acc; cx.setLineDash([3,3]); cx.beginPath();
+  cx.moveTo(dx,0); cx.lineTo(dx,H); cx.stroke(); cx.setLineDash([]);
+  cx.fillStyle = C.acc; cx.font = '11px system-ui';
+  cx.fillText('deploy ' + t[DEPLOY_IDX].toFixed(1) + ' s', Math.min(dx+5, W-84), 12);
+  cx.fillStyle = C.amber;
+  cx.fillText('descent rate m/s', pad+2, H-3);
+  cx.fillStyle = C.blue;
+  cx.fillText('temperature C', Math.min(pad+108, W-92), H-3);
+
+  const cx0 = pad + (t[idx]/TEND)*(W-2*pad);
+  cx.strokeStyle = C.fg; cx.lineWidth = 1.2; cx.beginPath();
+  cx.moveTo(cx0,0); cx.lineTo(cx0,H); cx.stroke();
+}
+
+function render(){
+  const k = idx;
+  document.getElementById('r_t').textContent = t[k].toFixed(1);
+  document.getElementById('r_alt').textContent = alt[k].toFixed(0);
+  document.getElementById('r_des').textContent = des[k].toFixed(1);
+  document.getElementById('r_temp').textContent = temp[k].toFixed(1);
+  document.getElementById('r_hum').textContent = hum[k].toFixed(0);
+  document.getElementById('clock').textContent = t[k].toFixed(1) + ' s';
+  const phase = document.getElementById('r_phase');
+  if (k >= DEPLOY_IDX){ phase.textContent = 'under canopy'; phase.style.color = C.acc; }
+  else { phase.textContent = 'free fall'; phase.style.color = C.amber; }
+  const frac = alt[k]/ALTMAX;
+  can.style.top = (6 + (1-frac)*(track.clientHeight-42)) + 'px';
+  can.classList.toggle('chute', k >= DEPLOY_IDX);
+  fill.style.height = (frac*100) + '%';
+  document.getElementById('scrub').value = Math.round(1000*t[k]/TEND);
+  draw();
+}
+
+document.getElementById('play').onclick = () => { playing = !playing;
+  document.getElementById('play').textContent = playing ? '\u23F8 Pause' : '\u25B6 Play';
+  if (playing){
+    if (idx >= n-1){ idx = 0; cursor = 0; render(); }   // replay from the start
+    last = performance.now(); requestAnimationFrame(step);
+  } };
+document.getElementById('scrub').oninput = e => { playing = false;
+  document.getElementById('play').textContent = '\u25B6 Play';
+  const target = (e.target.value/1000)*TEND;
+  idx = t.findIndex(v => v >= target); if (idx < 0) idx = n-1;
+  cursor = t[idx]; render(); };
+
+function step(now){
+  if (!playing) return;
+  const dtSeconds = (now-last)/1000; last = now;
+  cursor += dtSeconds*SPEED;                 // mission time advances with real time
+  while (idx < n-1 && t[idx+1] <= cursor) idx++;
+  render();
+  if (idx >= n-1){ playing = false;
+    document.getElementById('play').textContent = '\u25B6 Replay'; }
+  else requestAnimationFrame(step);
+}
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { sizeCanvas(); render(); }, 120);
+});
+
+sizeCanvas();
+render();
+
+</script>
       </div>
       <p style="font-size:.86rem;color:var(--muted);margin-top:10px">Press play to fly the
-      mission, or drag the slider to scrub through it. The can falls under its canopy, the
-      readouts update live, and the chart cursor follows the descent.</p>
+      mission, or drag the slider to scrub through it. Links: the
+      <a href="replay.html">replay on its own page</a>.</p>
     </section>
 
     <div class="rule"></div>

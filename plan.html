@@ -67,8 +67,13 @@
   .score{display:flex;height:44px;border:1px solid var(--rule);margin:22px 0 14px;
     font-family:var(--display);font-size:.83rem;overflow:hidden}
   .score span{display:flex;align-items:center;padding:0 12px;color:#fff;white-space:nowrap;
-    border-right:1px solid #ffffff40}
+    min-width:0;border-right:1px solid #ffffff40}
   .score span:last-child{border-right:0;color:var(--ink)}
+  .scorelegend{display:none;margin:0 0 14px}
+  .scorelegend div{display:flex;justify-content:space-between;gap:14px;padding:7px 0;
+    border-bottom:1px solid var(--hair);font-size:.9rem}
+  .scorelegend b{font-family:var(--display);font-weight:600}
+  .scorelegend i{font-style:normal;font-family:var(--mono);font-size:.82rem;color:var(--muted)}
   .score .s1{background:var(--teal);flex:35}
   .score .s2{background:#3E8F8C;flex:30}
   .score .s3{background:var(--blue);flex:25}
@@ -98,9 +103,7 @@
   figure.plot{margin:26px 0 0}
   figure.plot img{width:100%;height:auto;border:1px solid var(--hair);display:block}
   figure.plot figcaption{font-size:.83rem;color:var(--muted);padding-top:8px}
-  .replay{margin:26px 0 0;border:1px solid var(--hair);background:var(--paper);padding:20px;
-    display:flex;justify-content:center}
-  .replay iframe{width:700px;max-width:100%;height:560px;border:0;background:transparent}
+  .replay{margin:30px 0 0;border:1px solid var(--hair);background:var(--paper);padding:20px}
 
   .note{border-left:3px solid var(--teal);padding:2px 0 2px 18px;margin:24px 0;font-size:.94rem}
   .note.warn{border-left-color:var(--amber)}
@@ -120,11 +123,39 @@
   @media (max-width:900px){
     .hero{grid-template-columns:1fr;gap:30px}
     .two,.three{grid-template-columns:1fr;gap:22px}
-    .phase{grid-template-columns:26px 1fr;gap:12px}
-    .phase .when{grid-column:2}
+    .phase{grid-template-columns:26px 1fr;row-gap:3px;column-gap:14px}
+    .phase .n{grid-row:1 / span 2}
+    .phase .when{grid-column:2;grid-row:1}
+    .phase > div:last-child{grid-column:2;grid-row:2}
     .mast,.pad,footer{padding-left:22px;padding-right:22px}
+    .mast{flex-wrap:wrap;row-gap:3px}
     .titleblock{grid-template-columns:1fr 1fr}
     body{font-size:16px}
+  }
+  @media (max-width:640px){
+    /* the four scoring labels cannot fit across a phone: keep the proportional
+       bar, move the names+values into a legend underneath */
+    .score{height:26px;margin-bottom:10px}
+    .score span{padding:0;font-size:0}
+    .scorelegend{display:block}
+    /* the results table becomes one block per measurement */
+    table.mission thead{display:none}
+    table.mission,table.mission tbody,table.mission tr,table.mission td{display:block}
+    table.mission tr{display:grid;grid-template-columns:1fr auto;padding:11px 0;
+      border-bottom:1px solid var(--hair)}
+    table.mission td{border:0;padding:0}
+    table.mission td.num{text-align:right;padding-left:14px}
+    table.mission td.num::before{content:"value ";font-family:var(--display);font-size:.7rem;
+      color:var(--muted);vertical-align:1px}
+    table.mission td:last-child{grid-column:1 / -1;font-size:.85rem;color:var(--muted);
+      margin-top:5px;line-height:1.5}
+    .spec dl{grid-template-columns:1fr}
+    .spec dt{padding-bottom:0;border-bottom:0}
+    .spec dd{padding-top:2px}
+    .replay{padding:4px 0;border-left:0;border-right:0}
+    .titleblock{grid-template-columns:1fr}
+    .titleblock div{border-right:0;border-bottom:1px solid var(--hair)}
+    h1{font-size:1.95rem}
   }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -146,7 +177,16 @@
   .doc pre{background:#131A2108;border:1px solid var(--hair);padding:14px 16px;overflow-x:auto;
     font-family:var(--mono);font-size:.82rem;line-height:1.5}
   .doc pre code{background:none;border:0;padding:0}
+  .doc pre{max-width:100%}
+  .doc code{word-break:break-word}
   .doc a{word-break:break-word}
+  @media (max-width:640px){
+    /* markdown tables scroll inside their own box instead of widening the page */
+    .doc table{display:block;overflow-x:auto;max-width:100%}
+    .doc h1{font-size:1.3rem}
+    .doc h2{font-size:1.14rem}
+    .doc p,.doc ul,.doc ol{max-width:100%}
+  }
 </style>
 </head>
 <body>

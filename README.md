@@ -29,6 +29,23 @@ Requires Python 3 with `numpy` and `matplotlib`. The scripts write their outputs
 themselves (`code/figures/`, `code/*.csv`, `code/*.bin`); the copies in `data/` and `figures/`
 are the ones this site was built from.
 
+## Checking the layout
+
+`code/mobile_check.py` drives headless Chrome over the DevTools protocol and reports every
+element wider than the viewport, plus a screenshot at each width. (Headless Chrome clamps its own
+window to about 500 px, so `--window-size` alone cannot produce a real phone viewport — the check
+uses `Emulation.setDeviceMetricsOverride` instead.)
+
+```bash
+pip install websocket-client
+python code/mobile_check.py . 360 390 430        # overflow report + screenshots
+python code/shot_element.py . index.html ".replay" 390   # clip one element
+```
+
+Current status: **0 overflowing pages** at 360, 390 and 430 px for `index.html` and `replay.html`;
+`plan.html` keeps its wide timeline tables inside their own scroll boxes so the page itself never
+exceeds the viewport.
+
 ## Honest scope
 
 Everything here is a **simulation**. No CanSat hardware has been built or flown, and the flight
