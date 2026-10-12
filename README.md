@@ -12,6 +12,8 @@ entering it, and a complete simulated mission showing the engineering end to end
 | `index.html` | The brief: what the competition is, how it is scored, the plan, the demo results |
 | `plan.html` | The full plan — role split, architecture, schedule, questions for the organisers |
 | `replay.html` | Interactive flight replay (play / pause / scrub through the descent) |
+| `model.html` | Interactive true-scale 3D model: click a part to select it, drag it out, isolate it |
+| `models/` | Printable STLs of the can envelope and lid (fit check before you cut anything) |
 | `figures/` | The mission plots, generated from decoded telemetry |
 | `code/` | The simulation: physics, packet encoding, CRC, ground-station decode, plots |
 | `data/` | Raw telemetry bytes, decoded CSV, mission summary |
@@ -22,6 +24,7 @@ entering it, and a complete simulated mission showing the engineering end to end
 cd code
 python cansat_mission_demo.py     # simulate -> encode -> decode -> analyse -> plots
 python gen_replay.py              # rebuild the interactive replay from the results
+python cansat_3d_model.py         # regenerate the printable STLs (checks they are watertight)
 node test_replay_render.js        # exercise the replay JS across the whole flight
 ```
 

@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The CanSat in 3D — CanSat Bahrain 2026</title>
+<meta name="description" content="Interactive true-to-scale 3D model of a CanSat: 66 mm by 115 mm. Pick up each component, isolate it, and check whether it actually fits inside the can.">
+<style>
+  :root{
+    --paper:#EDEFF2; --sheet:#FDFDFC; --ink:#131A21; --rule:#C6CDD4; --hair:#DDE2E7;
+    --muted:#5A6672; --teal:#0F6E6B; --amber:#C4541F; --blue:#1F5C9E; --bad:#A32B1E;
+    --display:"Bahnschrift","DIN Alternate","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+    --body:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+    font-size:16.5px;line-height:1.62;-webkit-text-size-adjust:100%}
+  .sheet{max-width:1180px;margin:26px auto;background:var(--sheet);border:1px solid var(--rule)}
+  .pad{padding:0 46px}
+  main{max-width:1040px;margin:0 auto}
+  .mast{display:flex;justify-content:space-between;gap:18px;align-items:baseline;flex-wrap:wrap;
+    padding:16px 46px;border-bottom:1px solid var(--rule);font-size:.82rem;color:var(--muted)}
+  .mast b{font-family:var(--display);font-size:.95rem;color:var(--ink);font-weight:600}
+  h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:-.012em;line-height:1.12;margin:0}
+  h1{font-size:clamp(1.9rem,4.2vw,2.7rem);margin:34px 0 0}
+  h2{font-size:clamp(1.3rem,2.4vw,1.6rem);margin:0 0 8px}
+  h3{font-size:1rem;letter-spacing:0}
+  p{margin:0 0 1em}
+  a{color:var(--teal);text-underline-offset:3px}
+  a:focus-visible,button:focus-visible,.part:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .lede{font-size:1.1rem;max-width:66ch;margin-top:14px}
+  .rule{border-top:1px solid var(--rule);margin:36px 0 0}
+  section{padding-top:32px}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:20px 0 10px}
+  .seg{display:flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden;
+    background:var(--sheet)}
+  .seg button{font:inherit;font-size:.82rem;padding:6px 14px;border:0;border-right:1px solid var(--rule);
+    background:transparent;color:var(--ink);cursor:pointer;font-family:var(--display)}
+  .seg button:last-child{border-right:0}
+  .seg button[aria-pressed="true"]{background:var(--teal);color:#fff}
+  .tog{font:inherit;font-size:.82rem;padding:6px 13px;border:1px solid var(--rule);border-radius:999px;
+    background:transparent;color:var(--ink);cursor:pointer;font-family:var(--display);white-space:nowrap}
+  .tog[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .sepSlider{display:flex;align-items:center;gap:9px;font-family:var(--display);font-size:.8rem;
+    color:var(--muted);white-space:nowrap}
+  .sepSlider input{width:130px;accent-color:var(--teal)}
+
+  /* ---------- viewer ---------- */
+  .viewer{position:relative;border:1px solid var(--hair);background:var(--paper);overflow:hidden}
+  #stage{position:relative;width:100%;height:clamp(400px,64vh,620px);touch-action:none;
+    cursor:grab;user-select:none}
+  #stage:active{cursor:grabbing}
+  #stage.dragging{cursor:grabbing}
+  .lblLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .lbl{font-family:var(--display);font-size:11px;font-weight:600;color:var(--ink);
+    background:rgba(253,253,252,.88);border:1px solid var(--rule);border-radius:3px;
+    padding:2px 6px;white-space:nowrap}
+  .lbl.dim{background:rgba(19,26,33,.9);color:#fff;border-color:var(--ink);font-family:var(--mono);
+    font-size:10.5px}
+  .lbl.part{border-left:3px solid var(--amber)}
+  .hud{position:absolute;left:12px;bottom:10px;font-size:.74rem;color:var(--muted);
+    background:rgba(253,253,252,.86);border:1px solid var(--hair);padding:3px 8px;border-radius:3px}
+  .hud b{font-family:var(--mono);font-weight:600;color:var(--ink)}
+  .tip{position:absolute;right:12px;bottom:10px;font-size:.74rem;color:var(--muted);
+    background:rgba(253,253,252,.86);border:1px solid var(--hair);padding:3px 8px;border-radius:3px;
+    max-width:56%}
+  .fallback{display:none;padding:24px;text-align:center}
+  .fallback img{max-width:100%;height:auto;border:1px solid var(--rule)}
+  .fallback p{font-size:.85rem;color:var(--muted);margin-top:10px}
+
+  /* ---------- specs ---------- */
+  .specs{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:34px;margin-top:24px}
+  table{border-collapse:collapse;width:100%;font-size:.9rem}
+  th,td{text-align:left;padding:7px 10px 7px 0;border-bottom:1px solid var(--hair)}
+  th{font-family:var(--display);font-size:.78rem;color:var(--muted);font-weight:600;
+    border-bottom:1px solid var(--rule)}
+  td.n,th.n{text-align:right;padding-right:6px;font-family:var(--mono);font-size:.85rem;
+    font-variant-numeric:tabular-nums}
+  tr.part{cursor:pointer}
+  tr.part:hover td{background:#0F6E6B0D}
+  tr.part[aria-selected="true"] td{background:#0F6E6B14}
+  tr.part[aria-selected="true"] td:first-child{box-shadow:inset 3px 0 0 var(--amber)}
+  tr.part.offscreen td:not(.eye){opacity:.45}
+  .eye{border:0;background:transparent;cursor:pointer;padding:2px 4px;color:var(--muted);
+    font-size:.95rem;line-height:1;border-radius:3px}
+  .eye:hover{background:#131A210F}
+  .fit{font-family:var(--display);font-size:.72rem;padding:1px 6px;border-radius:999px;
+    border:1px solid var(--hair);color:var(--muted);white-space:nowrap}
+  .fit.ok{border-color:#0F6E6B55;color:var(--teal)}
+  .fit.no{border-color:#A32B1E55;color:var(--bad)}
+  .fit.ext{border-color:#C4541F55;color:var(--amber)}
+
+  .info{border:1px solid var(--hair);background:var(--paper);padding:16px 18px;align-self:start}
+  .info h3{font-family:var(--display);margin-bottom:4px}
+  .info .roleline{font-size:.78rem;color:var(--muted);font-family:var(--display)}
+  .info dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:12px 0 0;font-size:.85rem}
+  .info dt{font-family:var(--display);color:var(--muted);white-space:nowrap}
+  .info dd{margin:0;font-variant-numeric:tabular-nums}
+  .info .btnrow{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+  .info .btnrow button{font:inherit;font-size:.78rem;padding:5px 11px;border:1px solid var(--rule);
+    border-radius:999px;background:var(--sheet);cursor:pointer;font-family:var(--display)}
+  .info .btnrow button:hover{background:#0F6E6B12}
+  .note{border-left:3px solid var(--teal);padding:2px 0 2px 18px;margin:22px 0;font-size:.93rem}
+  code{font-family:var(--mono);font-size:.86em;background:#131A210A;padding:1px 5px;
+    border:1px solid var(--hair)}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:26px}
+  footer{padding:26px 46px 34px;color:var(--muted);font-size:.83rem;border-top:1px solid var(--rule);
+    margin-top:40px}
+
+  /* the WebGL canvas: size it from CSS, never from its width/height attributes */
+  #stage canvas{display:block;width:100%;height:100%}
+
+  @media (max-width:820px){
+    .pad,.mast,footer{padding-left:22px;padding-right:22px}
+    .specs{grid-template-columns:1fr;gap:22px}
+    #stage{height:clamp(320px,54vh,470px)}
+    h1{font-size:1.8rem}
+    .seg button{padding:6px 10px;font-size:.78rem}
+    .tip{display:none}
+    .sepSlider input{width:96px}
+  }
+  @media (max-width:640px){
+    /* five columns don't fit a phone: drop Role, keep the part, its verdict and mass */
+    table th:nth-child(2),table td:nth-child(2){display:none}
+    th,td{padding:7px 8px 7px 0}
+    .fit{white-space:normal}
+    .controls{gap:6px}
+    /* labels start hidden on a phone (see boot) and stay compact when switched on */
+    .lbl{font-size:9.5px;padding:1px 4px}
+    .lbl.dim{font-size:9px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="mast">
+    <span><b>CanSat Bahrain 2026</b> &nbsp;·&nbsp; the CanSat in 3D</span>
+    <span><a href="index.html">back to the mission brief</a></span>
+  </div>
+
+  <div class="pad">
+  <main>
+    <h1>Everything has to fit in here</h1>
+    <p class="lede">A true-scale 3D model — every dimension in millimetres, so what you see is what
+    has to fit. <strong>Click any part to pick it out of the stack, then drag it away and look at
+    it.</strong> The model measures each component against the 66 mm bore and tells you whether it
+    actually fits.</p>
+
+    <div class="controls">
+      <div class="seg" role="group" aria-label="View preset">
+        <button id="vCut" aria-pressed="true">Assembled</button>
+        <button id="vExp" aria-pressed="false">Exploded</button>
+        <button id="vDep" aria-pressed="false">Deployed</button>
+      </div>
+      <label class="sepSlider">separation
+        <input type="range" id="sep" min="0" max="100" value="0" aria-label="Exploded-view separation">
+      </label>
+      <button class="tog" id="tLabels" aria-pressed="true">Labels</button>
+      <button class="tog" id="tRotate" aria-pressed="true">Auto-rotate</button>
+      <button class="tog" id="reset">Reset everything</button>
+    </div>
+
+    <div class="viewer">
+      <div id="stage" role="application"
+           aria-label="Interactive 3D model of the CanSat. Click a component to select it, then drag to pull it out of the stack.">
+        <div class="lblLayer" id="lblLayer"></div>
+      </div>
+      <div class="hud" id="hud"><b>true scale</b> 1 unit = 1 mm</div>
+      <div class="tip" id="tip">click a part to select it · drag the selected part to pull it out
+        · Esc puts it back</div>
+      <div class="fallback" id="fallback">
+        <img src="figures/model-poster.png" alt="Still render of the CanSat 3D model, cut away to show the internal components.">
+        <p>Your browser could not start WebGL, so this is a still render. Open the page on a desktop
+        browser to rotate the model and pick the parts up.</p>
+      </div>
+    </div>
+
+    <div class="specs">
+      <div>
+        <h3 style="margin-bottom:10px">What is inside</h3>
+        <table>
+          <thead><tr><th>Component</th><th>Role</th><th>Fits?</th><th class="n">Mass g</th><th></th></tr></thead>
+          <tbody id="partsBody"></tbody>
+          <tfoot>
+            <tr><td><strong>Total</strong></td><td>design mass, matches the flight simulation</td>
+                <td colspan="2" class="n"><strong id="massTotal">—</strong></td><td></td></tr>
+          </tfoot>
+        </table>
+        <p style="font-size:.83rem;color:var(--muted);margin-top:10px">"Fits?" is measured from the
+        model's own geometry: the widest point of each part against the 63.6 mm internal bore.</p>
+      </div>
+      <aside class="info" id="info"></aside>
+    </div>
+
+    <div class="rule"></div>
+
+    <section>
+      <h2>Why this model exists</h2>
+      <div class="grid3">
+        <div>
+          <h3 style="color:var(--teal);margin-bottom:6px">It answers the packing question</h3>
+          <p style="font-size:.93rem">A 66 mm cylinder sounds generous until you put a camera, a
+          sensor board, a microcontroller, a battery and a radio in it. Everything is at real size,
+          so a part that does not fit is visibly not fitting.</p>
+        </div>
+        <div>
+          <h3 style="color:var(--teal);margin-bottom:6px">It shows the parachute problem</h3>
+          <p style="font-size:.93rem">Switch to <em>Deployed</em>. The canopy is 0.58 m across —
+          8.8× the width of the can. Teams routinely underestimate how much fabric that is and how
+          long the shroud lines have to be.</p>
+        </div>
+        <div>
+          <h3 style="color:var(--teal);margin-bottom:6px">It is a scored deliverable</h3>
+          <p style="font-size:.93rem">The guidelines reward "an enhanced 3D CanSat model" as a kit
+          enhancement. This is that — plus two files you can hand straight to a 3D printer.</p>
+        </div>
+      </div>
+
+      <div class="note">Component masses are a <strong>preliminary budget</strong>, not weighed
+      hardware: they total 350 g, the same figure the flight simulation uses, so the parachute
+      sizing here matches the parachute sizing in the mission. Replace them with real measurements
+      as soon as the kit arrives — this model is a spreadsheet you can look at.</div>
+
+      <h3 style="margin:22px 0 8px">Print files</h3>
+      <p style="font-size:.93rem">Generated from the same dimensions as the model above, as ASCII
+      STL — a hollow shell and a lid, for a fit check before you cut anything real:</p>
+      <ul style="font-size:.93rem">
+        <li><a href="models/cansat_shell.stl">cansat_shell.stl</a> — Ø66 × 115 mm, 1.2 mm wall,
+          closed base, open top</li>
+        <li><a href="models/cansat_lid.stl">cansat_lid.stl</a> — top cap with a centred antenna
+          hole; cut the camera window to suit your module</li>
+      </ul>
+      <p style="font-size:.86rem;color:var(--muted)">A sizing and packing aid, not a flight
+      structure. Regenerate with <code>code/cansat_3d_model.py</code>.</p>
+    </section>
+  </main>
+  </div>
+
+  <footer>
+    <p><a href="index.html">Mission brief</a> · <a href="plan.html">The plan</a> ·
+    <a href="replay.html">Flight replay</a></p>
+  </footer>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+/* ============================================================================
+   CanSat Bahrain 2026 — true-scale model
+   1 scene unit = 1 mm. Can: Ø66 × 115 mm, 1.2 mm wall.
+   Component masses total 350 g, matching the flight simulation and the parachute
+   sizing (Ø580 mm canopy for 5 m/s), and matching code/cansat_3d_model.py.
+   ========================================================================== */
+
+const CAN_R = 33;            // outer radius (Ø66)
+const CAN_H = 115;           // overall height
+const WALL  = 1.2;           // shell wall
+const BORE  = CAN_R - WALL;  // 31.8 mm internal radius
+const Y0 = -CAN_H / 2, Y1 = CAN_H / 2;
+const CANOPY_R = 290;        // Ø580 mm canopy
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage = document.getElementById('stage');
+const lblLayer = document.getElementById('lblLayer');
+const info = document.getElementById('info');
+const hud = document.getElementById('hud');
+
+/* component metadata — drives the table, the info panel and the fit check.
+   All of these strings are literals authored here; nothing user-supplied is
+   ever interpolated into innerHTML. */
+const PARTS = [
+  { id:'shell',   name:'Shell and structure', mass:60,  role:'Packaging', fit:'envelope',
+    spec:'Ø66 × 115 mm, 1.2 mm wall, printed and lined, removable camera window',
+    note:'The envelope everything else is sized by. Antennas may be mounted externally by rule.' },
+  { id:'camera',  name:'RGB camera', mass:14, role:'Payload', fit:'internal',
+    spec:'~30 × 22 mm board, lens facing the window, images at 1 Hz',
+    note:'The guidelines specifically reward creative use of the camera, and it is the hardest '
+       + 'part to drive from an Arduino Nano — confirm the exact module at the workshop.' },
+  { id:'sensors', name:'Sensor board', mass:10, role:'Primary mission', fit:'internal',
+    spec:'BMP180 · DHT11 · 6-axis IMU · magnetometer, circular PCB to match the bore',
+    note:'Produces the descent profile: altitude, descent rate, temperature, humidity, attitude '
+       + 'and heading. This is the data the 35% science score hangs on.' },
+  { id:'nano',    name:'Arduino Nano', mass:8,  role:'Avionics', fit:'internal',
+    spec:'ATmega328P, 32 kB flash, 2 kB RAM',
+    note:'2 kB of RAM is the hard constraint: images must stream to storage, never buffer.' },
+  { id:'radio',   name:'LoRa 433 MHz + microSD', mass:12, role:'Comms + logging', fit:'internal',
+    spec:'Downlink at 1 Hz, on-board log of every sample',
+    note:'The kit provides the transmitter only. Confirm the ground receiver, and always log on '
+       + 'board too — a lost packet must not mean a lost mission.' },
+  { id:'battery', name:'Battery pack', mass:150, role:'Power', fit:'internal',
+    spec:'1S Li-ion pouch, sized from the power budget',
+    note:'The heaviest item, and the reason the canopy is 0.58 m across rather than 0.35 m.' },
+  { id:'antenna', name:'Antenna', mass:3,  role:'Comms', fit:'external',
+    spec:'External by rule — the only thing allowed outside the can',
+    note:'Keeping it clear of the battery and the camera avoids the two worst interference '
+       + 'problems on a can this small.' },
+  { id:'harness', name:'Harness and shock cord', mass:20, role:'Integration', fit:'external',
+    spec:'Wiring, connectors, canopy attachment ring above the lid',
+    note:'Where vibration failures live. Strain-relieve everything that moves.' },
+  { id:'canopy',  name:'Parachute', mass:73, role:'Recovery', fit:'external',
+    spec:'Ø580 mm canopy, 8 shroud lines, sized for 5 m/s descent',
+    note:'From v = sqrt(2mg / ρ·Cd·A). At true scale it is 8.8× the width of the can.' },
+];
+
+let renderer = null;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+} catch (e) { renderer = null; }
+if (!renderer || !renderer.getContext()) {
+  stage.style.display = 'none';
+  document.getElementById('fallback').style.display = 'block';
+  window.__MODEL_READY__ = false;
+} else {
+  boot();
+}
+
+function boot() {
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.06;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  stage.appendChild(renderer.domElement);
+  const canvas = renderer.domElement;
+
+  const labelRenderer = new CSS2DRenderer({ element: lblLayer });
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xEDEFF2);
+  const camera = new THREE.PerspectiveCamera(38, 1, 1, 9000);
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.07;
+  controls.enablePan = false;
+  controls.minDistance = 55;
+  controls.maxDistance = 3200;
+  controls.autoRotate = !reduceMotion;
+  controls.autoRotateSpeed = 0.6;
+  camera.position.set(168, 96, 214);      // framed on the can until a view preset runs
+
+  /* ------------------------- environment (for metal) --------------------- */
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  {
+    const w = 16, h = 64, data = new Uint8Array(w * h * 4);
+    for (let y = 0; y < h; y++) {
+      const t = y / (h - 1);
+      const sky = t < 0.5 ? 236 - t * 60 : 206 - (t - 0.5) * 300;
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        const z = 1 + 0.05 * Math.cos((x / w) * Math.PI * 4);
+        data[i]     = Math.max(20, Math.min(255, sky * z));
+        data[i + 1] = Math.max(20, Math.min(255, sky * z * 0.99));
+        data[i + 2] = Math.max(24, Math.min(255, sky * z * 1.02));
+        data[i + 3] = 255;
+      }
+    }
+    const tex = new THREE.DataTexture(data, w, h, THREE.RGBAFormat);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    tex.needsUpdate = true;
+    scene.environment = pmrem.fromEquirectangular(tex).texture;
+    tex.dispose();
+  }
+
+  /* ------------------------------- lights -------------------------------- */
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xccd3da, 0.95));
+  const key = new THREE.DirectionalLight(0xffffff, 3.4);
+  key.position.set(190, 260, 190);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.near = 10;
+  key.shadow.camera.far = 1600;
+  const sc = 300;
+  Object.assign(key.shadow.camera, { left:-sc, right:sc, top:sc, bottom:-sc });
+  key.shadow.bias = -0.0002;
+  key.shadow.normalBias = 0.35;
+  key.shadow.radius = 3;
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xbfd4ff, 1.5);
+  rim.position.set(-260, 90, -190);
+  scene.add(rim);
+  const fill = new THREE.DirectionalLight(0xffe6cc, 0.5);
+  fill.position.set(60, -160, 170);
+  scene.add(fill);
+
+  /* ------------------------------ materials ------------------------------ */
+  const M = {
+    alu:   new THREE.MeshStandardMaterial({ color:0xcfd6dd, metalness:0.95, roughness:0.28,
+             transparent:true, opacity:0.20, side:THREE.DoubleSide, depthWrite:false }),
+    rim:   new THREE.MeshStandardMaterial({ color:0xbfc7cf, metalness:1.0, roughness:0.34 }),
+    fr4:   new THREE.MeshStandardMaterial({ color:0x1c6b4a, roughness:0.62, metalness:0.05 }),
+    fr4b:  new THREE.MeshStandardMaterial({ color:0x14496e, roughness:0.60, metalness:0.05 }),
+    chip:  new THREE.MeshStandardMaterial({ color:0x14181c, roughness:0.50, metalness:0.15 }),
+    gold:  new THREE.MeshStandardMaterial({ color:0xd9b45a, metalness:1.0, roughness:0.32 }),
+    steel: new THREE.MeshStandardMaterial({ color:0xb9c0c7, metalness:1.0, roughness:0.30 }),
+    lens:  new THREE.MeshStandardMaterial({ color:0x0a1420, metalness:0.4, roughness:0.08 }),
+    glass: new THREE.MeshStandardMaterial({ color:0x9fc4d8, metalness:0.1, roughness:0.06,
+             transparent:true, opacity:0.35 }),
+    pouch: new THREE.MeshStandardMaterial({ color:0x2b2f36, roughness:0.85, metalness:0.10 }),
+    cloth: new THREE.MeshStandardMaterial({ color:0xe3d2b4, roughness:0.95, metalness:0.0,
+             side:THREE.DoubleSide }),
+    cord:  new THREE.MeshStandardMaterial({ color:0x8a96a3, roughness:0.80, metalness:0.0 }),
+    dim:   new THREE.MeshBasicMaterial({ color:0x131A21 }),
+    ground:new THREE.MeshStandardMaterial({ color:0xe6eaee, roughness:1.0, metalness:0.0 }),
+    pick:  new THREE.LineBasicMaterial({ color:0xC4541F }),
+  };
+
+  /* --------------------------- build the model --------------------------- */
+  const model = new THREE.Group();
+  scene.add(model);
+  const parts = {};                    // id -> { group, meshes, home, m }
+  const pickable = [];
+
+  function addPart(id, group) {
+    const meshes = [];
+    group.traverse(o => {
+      if (!o.isMesh) return;
+      o.material = o.material.clone();       // per-part material, so highlights don't bleed
+      o.material.envMapIntensity = 1.35;     // crisper metal response
+      if (id !== 'shell') {
+        o.castShadow = true;                 // real contact shadow under the stack
+        o.receiveShadow = true;
+      }
+      meshes.push(o);
+      o.userData.partId = id;
+      pickable.push(o);
+    });
+    parts[id] = { group, meshes, home: group.position.clone(), m: null };
+    model.add(group);
+    return group;
+  }
+  function label(text, cls, x, y, z) {
+    const el = document.createElement('div');
+    el.className = 'lbl' + (cls ? ' ' + cls : '');
+    el.textContent = text;
+    const o = new CSS2DObject(el);
+    o.position.set(x, y, z);
+    return o;
+  }
+  const UP = new THREE.Vector3(0, 1, 0);
+  const _a = new THREE.Vector3(), _d = new THREE.Vector3();
+  function rod(mat, radius, seg = 8) {
+    return new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 1, seg), mat);
+  }
+  function span(mesh, ax, ay, az, bx, by, bz) {
+    _a.set(ax, ay, az);
+    _d.set(bx - ax, by - ay, bz - az);
+    const len = _d.length() || 1e-6;
+    mesh.position.copy(_a).addScaledVector(_d, 0.5);
+    mesh.quaternion.setFromUnitVectors(UP, _d.clone().normalize());
+    mesh.scale.set(1, len, 1);
+    return mesh;
+  }
+
+  /* --- shell ------------------------------------------------------------- */
+  const shell = new THREE.Group();
+  shell.add(new THREE.Mesh(new THREE.CylinderGeometry(CAN_R, CAN_R, CAN_H, 72, 1, true), M.alu));
+  const rimTop = new THREE.Mesh(new THREE.TorusGeometry(CAN_R, 0.9, 10, 72), M.rim);
+  rimTop.rotation.x = Math.PI / 2; rimTop.position.y = Y1;
+  const rimBot = rimTop.clone(); rimBot.position.y = Y0;
+  shell.add(rimTop, rimBot);
+  const base = new THREE.Mesh(new THREE.CircleGeometry(BORE, 64), M.fr4b);
+  base.rotation.x = -Math.PI / 2; base.position.y = Y0 + 0.6; base.receiveShadow = true;
+  shell.add(base);
+  const lid = new THREE.Mesh(new THREE.RingGeometry(3, CAN_R, 64), M.rim);
+  lid.rotation.x = -Math.PI / 2; lid.position.y = Y1;
+  shell.add(lid);
+  const win = new THREE.Mesh(new THREE.PlaneGeometry(22, 17), M.glass);
+  win.position.set(CAN_R - 0.3, 30, 0); win.rotation.y = Math.PI / 2;
+  shell.add(win);
+  shell.add(label('camera window', 'part', CAN_R + 5, 30, 0));
+  addPart('shell', shell);
+
+  /* --- camera ------------------------------------------------------------ */
+  const cam = new THREE.Group();
+  const camBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 22, 30), M.fr4b);
+  camBoard.position.set(20, 0, 0);
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 5.5, 7, 24), M.lens);
+  lens.rotation.z = -Math.PI / 2; lens.position.set(26, 0, 0);
+  const lensRing = new THREE.Mesh(new THREE.TorusGeometry(5.6, 0.8, 8, 24), M.steel);
+  lensRing.rotation.y = Math.PI / 2; lensRing.position.set(29.4, 0, 0);
+  const camChip = new THREE.Mesh(new THREE.BoxGeometry(1.2, 9, 9), M.chip);
+  camChip.position.set(19, -6, 8);
+  cam.add(camBoard, lens, lensRing, camChip);
+  cam.add(label('RGB camera', 'part', 24, 15, 0));
+  cam.position.set(0, 32, 0);
+  addPart('camera', cam);
+
+  /* --- sensor board (circular, to match the bore) ------------------------ */
+  const sen = new THREE.Group();
+  const senBoard = new THREE.Mesh(new THREE.CylinderGeometry(30, 30, 1.6, 48), M.fr4);
+  senBoard.receiveShadow = true;
+  sen.add(senBoard);
+  [[-14,-8,7,5],[3,-11,8,6],[16,8,7,7],[-17,7,5,5]].forEach(([x,z,w,d]) => {
+    const c = new THREE.Mesh(new THREE.BoxGeometry(w, 2.2, d), M.chip);
+    c.position.set(x, 1.9, z);
+    const pads = new THREE.Mesh(new THREE.BoxGeometry(w + 3, 0.3, d + 3), M.gold);
+    pads.position.set(x, 1.0, z);
+    sen.add(c, pads);
+  });
+  const baro = new THREE.Mesh(new THREE.BoxGeometry(6, 2.4, 6), M.steel);
+  baro.position.set(19, 2, -11);
+  sen.add(baro);
+  sen.add(label('BMP180 · DHT11 · IMU · magnetometer', 'part', -30, 7, 0));
+  sen.position.set(0, 8, 0);
+  addPart('sensors', sen);
+
+  /* --- Arduino Nano ------------------------------------------------------ */
+  const nano = new THREE.Group();
+  nano.add(new THREE.Mesh(new THREE.BoxGeometry(45, 1.6, 18), M.fr4b));
+  const mcu = new THREE.Mesh(new THREE.BoxGeometry(16, 2.4, 8), M.chip);
+  mcu.position.set(-4, 2, 0);
+  const usb = new THREE.Mesh(new THREE.BoxGeometry(8, 4.4, 6), M.steel);
+  usb.position.set(-20, 2.2, 0);
+  nano.add(mcu, usb);
+  [-8, 8].forEach(zz => {
+    const h = new THREE.Mesh(new THREE.BoxGeometry(38, 2.6, 2.6), M.chip);
+    h.position.set(2, 2.1, zz); nano.add(h);
+  });
+  nano.add(label('Arduino Nano', 'part', 0, 9, 0));
+  nano.position.set(-2, -16, 0);
+  addPart('nano', nano);
+
+  /* --- radio + logging --------------------------------------------------- */
+  const radio = new THREE.Group();
+  radio.add(new THREE.Mesh(new THREE.BoxGeometry(24, 1.6, 28), M.fr4));
+  const lora = new THREE.Mesh(new THREE.BoxGeometry(16, 3.2, 16), M.steel);
+  lora.position.set(-3, 2.4, -5);
+  const sd = new THREE.Mesh(new THREE.BoxGeometry(14, 3, 12), M.chip);
+  sd.position.set(3, 2.4, 8);
+  radio.add(lora, sd);
+  radio.add(label('LoRa 433 MHz · microSD log', 'part', 0, 11, 0));
+  radio.position.set(1, -33, 0);
+  addPart('radio', radio);
+
+  /* --- battery ----------------------------------------------------------- */
+  const bat = new THREE.Group();
+  const pouch = new THREE.Mesh(new THREE.BoxGeometry(52, 15, 26), M.pouch);
+  pouch.castShadow = true; pouch.receiveShadow = true;
+  const tape = new THREE.Mesh(new THREE.BoxGeometry(53, 3, 27), M.steel);
+  tape.position.y = 3;
+  const batLab = new THREE.Mesh(new THREE.BoxGeometry(30, 0.3, 14), M.cloth);
+  batLab.position.set(0, 7.6, 0);
+  bat.add(pouch, tape, batLab);
+  bat.add(label('battery pack', 'part', -48, 0, 0));
+  bat.position.set(-1, -46, 0);
+  addPart('battery', bat);
+
+  /* --- harness + antenna ------------------------------------------------- */
+  const harness = new THREE.Group();
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(9, 1.1, 8, 32), M.steel);
+  ring.rotation.x = Math.PI / 2; ring.position.y = 60;
+  harness.add(ring);
+  harness.add(span(rod(M.cord, 0.7, 6), -6, 57, 0, 0, 74, 0));
+  harness.add(span(rod(M.cord, 0.7, 6),  6, 57, 0, 0, 74, 0));
+  addPart('harness', harness);
+
+  const antenna = new THREE.Group();
+  antenna.add(span(rod(M.gold, 0.9, 6), 6, -30, 6, 26, 64, 14));
+  const antBase = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 4, 12), M.steel);
+  antBase.position.set(6, -30, 6);
+  antenna.add(antBase);
+  antenna.add(label('antenna (external)', 'part', 26, 64, 14));
+  addPart('antenna', antenna);
+
+  /* --- parachute --------------------------------------------------------- */
+  const chute = new THREE.Group();
+  const canopyGeo = new THREE.SphereGeometry(CANOPY_R, 56, 22, 0, Math.PI * 2, 0, Math.PI / 2);
+  {
+    const p = canopyGeo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      if (p.getY(i) > 1) {
+        p.setY(i, p.getY(i) + Math.sin(p.getX(i) * 0.11) * Math.cos(p.getZ(i) * 0.11) * 2.6);
+      }
+    }
+    canopyGeo.computeVertexNormals();
+  }
+  const canopy = new THREE.Mesh(canopyGeo, M.cloth);
+  canopy.castShadow = true;
+  chute.add(canopy);
+  const hem = new THREE.Mesh(new THREE.TorusGeometry(CANOPY_R, 1.6, 8, 56), M.cord);
+  hem.rotation.x = Math.PI / 2;
+  chute.add(hem);
+  const shrouds = [];
+  for (let i = 0; i < 8; i++) { const s = rod(M.cord, 0.55, 5); shrouds.push(s); chute.add(s); }
+  chute.add(label('canopy Ø580 mm — 8.8× the can', 'dim', 0, 28, 0));
+  chute.position.y = 74;
+  addPart('canopy', chute);
+  let deployT = 0;
+
+  /* --- dimension lines --------------------------------------------------- */
+  const dims = new THREE.Group();
+  const rD = 0.85;
+  /* height: extension lines, dimension line, diagonal terminators */
+  dims.add(span(rod(M.dim, 0.5, 6), CAN_R, Y1, 0, CAN_R + 20, Y1, 0));
+  dims.add(span(rod(M.dim, 0.5, 6), CAN_R, Y0, 0, CAN_R + 20, Y0, 0));
+  dims.add(span(rod(M.dim, rD, 6), CAN_R + 17, Y0, 0, CAN_R + 17, Y1, 0));
+  dims.add(span(rod(M.dim, rD, 6), CAN_R + 12, Y1 + 4, 0, CAN_R + 22, Y1 - 4, 0));
+  dims.add(span(rod(M.dim, rD, 6), CAN_R + 12, Y0 + 4, 0, CAN_R + 22, Y0 - 4, 0));
+  dims.add(label('115 mm', 'dim', CAN_R + 30, 2, 0));
+  /* diameter */
+  dims.add(span(rod(M.dim, 0.5, 6), -CAN_R, Y0, 0, -CAN_R, Y0 - 24, 0));
+  dims.add(span(rod(M.dim, 0.5, 6),  CAN_R, Y0, 0,  CAN_R, Y0 - 24, 0));
+  dims.add(span(rod(M.dim, rD, 6), -CAN_R, Y0 - 21, 0, CAN_R, Y0 - 21, 0));
+  dims.add(span(rod(M.dim, rD, 6), -CAN_R - 4, Y0 - 16, 0, -CAN_R + 4, Y0 - 26, 0));
+  dims.add(span(rod(M.dim, rD, 6),  CAN_R - 4, Y0 - 16, 0,  CAN_R + 4, Y0 - 26, 0));
+  dims.add(label('Ø66 mm', 'dim', 0, Y0 - 31, 0));
+  model.add(dims);
+
+  /* --- ground: soft contact shadow + a scale grid ------------------------ */
+  const ground = new THREE.Group();
+  const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(1800, 1800),
+    new THREE.ShadowMaterial({ opacity:0.30 }));
+  shadowPlane.rotation.x = -Math.PI / 2; shadowPlane.position.y = Y0 - 0.2;
+  shadowPlane.receiveShadow = true;
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(220, 64), M.ground);
+  disc.rotation.x = -Math.PI / 2; disc.position.y = Y0 - 0.4; disc.receiveShadow = true;
+  /* a soft blob under the can, so it reads as standing on the stage even
+     where the shadow map is faint */
+  const blobTex = (() => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g2 = c.getContext('2d');
+    const grad = g2.createRadialGradient(64, 64, 4, 64, 64, 62);
+    grad.addColorStop(0.0, 'rgba(19,26,33,0.55)');
+    grad.addColorStop(0.55, 'rgba(19,26,33,0.20)');
+    grad.addColorStop(1.0, 'rgba(19,26,33,0.0)');
+    g2.fillStyle = grad;
+    g2.fillRect(0, 0, 128, 128);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  })();
+  const blob = new THREE.Mesh(new THREE.PlaneGeometry(150, 150),
+    new THREE.MeshBasicMaterial({ map:blobTex, transparent:true, depthWrite:false }));
+  blob.rotation.x = -Math.PI / 2;
+  blob.position.y = Y0 - 0.15;
+  blob.userData.isBlob = true;
+  const grid = new THREE.GridHelper(560, 28, 0xb9c0c7, 0xd6dbe0);
+  grid.material.transparent = true; grid.material.opacity = 0.55;
+  grid.position.y = Y0 - 0.5;
+  ground.add(disc, shadowPlane, blob, grid);
+  scene.add(ground);
+
+  /* --- selection wireframe box ------------------------------------------- */
+  const selBox = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), M.pick);
+  selBox.visible = false;
+  scene.add(selBox);
+
+  /* ----------------- measure every part from its own geometry ------------ */
+  model.updateMatrixWorld(true);
+  const _v = new THREE.Vector3();
+  for (const id in parts) {
+    const p = parts[id];
+    const box = new THREE.Box3();
+    let maxR = 0, minY = Infinity, maxY = -Infinity;
+    for (const mesh of p.meshes) {
+      mesh.updateWorldMatrix(true, false);
+      const pos = mesh.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        _v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+        const r = Math.hypot(_v.x, _v.z);
+        if (r > maxR) maxR = r;
+        if (_v.y < minY) minY = _v.y;
+        if (_v.y > maxY) maxY = _v.y;
+        box.expandByPoint(_v);
+      }
+    }
+    p.m = { maxR, minY, maxY, box };
+    const meta = PARTS.find(x => x.id === id);
+    if (meta.fit === 'internal') {
+      meta.verdict = maxR <= BORE
+        ? { ok:true,  text:'fits, Ø' + (maxR * 2).toFixed(1) }
+        : { ok:false, text:'too wide: Ø' + (maxR * 2).toFixed(1) + ' needed' };
+    } else if (meta.fit === 'external') {
+      meta.verdict = { ok:true, text:'outside by rule' };
+    } else {
+      meta.verdict = { ok:true, text:'defines the envelope' };
+    }
+  }
+
+  /* ------------------------------- state --------------------------------- */
+  const EXPLODE = {
+    camera:  new THREE.Vector3(86, 44, 0),
+    sensors: new THREE.Vector3(0, 40, 0),
+    nano:    new THREE.Vector3(0, 6, 0),
+    radio:   new THREE.Vector3(0, -34, 0),
+    battery: new THREE.Vector3(0, -78, 0),
+    antenna: new THREE.Vector3(26, 30, 0),
+    harness: new THREE.Vector3(0, 40, 0),
+    shell:   new THREE.Vector3(-104, 0, 0),
+    canopy:  new THREE.Vector3(0, 0, 0),
+  };
+  const manual = {};                     // id -> Vector3 dragged offset
+  const hidden = new Set();
+  const S = {
+    mode:'assembled', sep:0, selected:null, hovered:null, solo:false,
+    labels:true, dim:true,
+  };
+
+  function offsetOf(id) {
+    if (!manual[id]) manual[id] = new THREE.Vector3();
+    return manual[id];
+  }
+
+  /* ------------------------------ views ---------------------------------- */
+  const VIEWS = {
+    assembled: { cam:[168, 96, 214], target:[0, 0, 0], shell:0.20, dims:true, ground:true },
+    exploded:  { cam:[300, 150, 360], target:[0, -18, 0], shell:0.09, dims:false, ground:false },
+    deployed:  { cam:[540, 260, 640], target:[0, 340, 0], shell:0.34, dims:false, ground:false },
+  };
+  let camTween = null;
+
+  function setView(name, instant) {
+    if (!VIEWS[name]) return;
+    const v = VIEWS[name];
+    S.mode = name;
+    deployT = name === 'deployed' ? 1 : 0;
+    dims.visible = v.dims;
+    ground.visible = v.ground;
+    dims.traverse(o => { if (o.isCSS2DObject) o.visible = S.labels && v.dims; });
+    if (name === 'exploded' && S.sep === 0) setSep(100);
+    if (name === 'assembled') setSep(0);
+    if (name === 'deployed') setSep(0);
+    hud.innerHTML = name === 'deployed'
+      ? '<b>true scale</b> canopy at real size — the can is the small thing at the bottom'
+      : '<b>true scale</b> 1 unit = 1 mm · grid squares 20 mm';
+    const snap = instant || reduceMotion;
+    camTween = { from:camera.position.clone(), to:new THREE.Vector3(...v.cam),
+                 fromT:controls.target.clone(), toT:new THREE.Vector3(...v.target), t:snap ? 1 : 0 };
+    if (snap) {
+      camera.position.copy(camTween.to); controls.target.copy(camTween.toT); camTween = null;
+    }
+    syncButtons();
+  }
+  const sepInput = document.getElementById('sep');
+  function setSep(pct) {
+    S.sep = pct;
+    sepInput.value = pct;
+    if (pct === 0 && S.mode === 'exploded') S.mode = 'assembled';
+    if (pct > 0 && S.mode !== 'deployed') S.mode = 'exploded';
+    syncButtons();
+  }
+  sepInput.addEventListener('input', e => setSep(Number(e.target.value)));
+
+  /* ------------------- selection, dimming, isolation --------------------- */
+  let soloBackup = null;
+  function clearSelection() {
+    S.selected = null;
+    S.solo = false;
+    restoreAll();
+    selBox.visible = false;
+    showPart(null);
+    syncTable();
+  }
+  function restoreAll() {
+    for (const id in parts) {
+      const p = parts[id];
+      p.group.visible = !hidden.has(id);
+      for (const mesh of p.meshes) {
+        if (mesh.userData.isShell) continue;
+        mesh.material.transparent = mesh.userData.wasTransparent || false;
+        mesh.material.opacity = mesh.userData.wasOpacity ?? 1;
+        mesh.material.depthWrite = mesh.userData.wasDepthWrite ?? true;
+        mesh.material.emissive.setHex(0x000000);
+        mesh.material.emissiveIntensity = 0;
+      }
+      setLabels(id, true);
+    }
+    dims.visible = VIEWS[S.mode].dims;
+    ground.visible = VIEWS[S.mode].ground;
+  }
+  function select(id, opts) {
+    opts = opts || {};
+    if (S.selected === id && !opts.force) { clearSelection(); return; }
+    S.selected = id;
+    S.solo = false;
+    restoreAll();
+    for (const other in parts) {
+      if (other === id) continue;
+      const p = parts[other];
+      if (p.group.userData.noDim) continue;
+      p.group.visible = true;
+      for (const mesh of p.meshes) {
+        if (mesh.userData.wasTransparent === undefined) {
+          mesh.userData.wasTransparent = mesh.material.transparent;
+          mesh.userData.wasOpacity = mesh.material.opacity;
+          mesh.userData.wasDepthWrite = mesh.material.depthWrite;
+        }
+        mesh.material.transparent = true;
+        mesh.material.opacity = 0.07;        // unmistakably faded next to the selection
+        mesh.material.depthWrite = false;
+      }
+      setLabels(other, false);
+    }
+    showPart(id);
+    syncTable();
+    /* fly the camera to frame the part, if the user has not dragged it far away */
+    if (!opts.keepCamera) focusOn(id);
+  }
+  /* The render loop owns group.visible, so isolation has to go through the same
+     `hidden` set the eye buttons use - setting visible here would be undone on the
+     next frame. */
+  let preSolo = null;
+  function isolate(id, on) {
+    if (on) {
+      if (!S.solo) preSolo = new Set(hidden);
+      for (const other in parts) if (other !== id) hidden.add(other);
+      S.solo = true;
+    } else {
+      hidden.clear();
+      if (preSolo) preSolo.forEach(x => hidden.add(x));
+      preSolo = null;
+      S.solo = false;
+    }
+    syncTable();
+  }
+  function focusOn(id) {
+    const p = parts[id];
+    p.group.updateWorldMatrix(true, false);
+    const box = new THREE.Box3().setFromObject(p.group);
+    const c = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const radius = Math.max(size.x, size.y, size.z) * 0.5;
+    const dist = Math.min(2600, Math.max(120, radius / Math.tan(THREE.MathUtils.degToRad(19))));
+    const dir = camera.position.clone().sub(controls.target).normalize();
+    if (!isFinite(dir.x) || dir.lengthSq() < 1e-6) dir.set(0.6, 0.35, 0.72).normalize();
+    camTween = { from:camera.position.clone(), to:c.clone().addScaledVector(dir, dist),
+                 fromT:controls.target.clone(), toT:c, t:reduceMotion ? 1 : 0 };
+    if (reduceMotion) {
+      camera.position.copy(camTween.to); controls.target.copy(camTween.toT); camTween = null;
+    }
+  }
+
+  /* highlight without disturbing the shared material graph */
+  function setHover(id, on) {
+    if (!parts[id]) return;
+    for (const mesh of parts[id].meshes) {
+      if (mesh.userData.isGlass) continue;
+      mesh.material.emissive.setHex(on ? 0x1f6b66 : 0x000000);
+      mesh.material.emissiveIntensity = on ? 0.55 : 0;
+    }
+    parts[id].group.traverse(o => {
+      if (o.isCSS2DObject) o.element.classList.toggle('lbl-part-active', on);
+    });
+  }
+  function setLabels(id, on) {
+    const list = id ? [parts[id]] : Object.values(parts);
+    for (const p of list) {
+      if (!p) continue;
+      const isDimLabel = p.group.children.some(c => c.isCSS2DObject && c.element.classList.contains('dim'));
+      p.group.traverse(o => {
+        if (!o.isCSS2DObject) return;
+        o.visible = S.labels && on && (!isDimLabel || S.mode === 'deployed');
+      });
+    }
+  }
+  /* CSS2DRenderer checks only object.visible, not the parent's, so labels of a
+     hidden group keep drawing. Decide label visibility centrally instead. */
+  function refreshLabels() {
+    /* in isolation there is no can left to dimension, and the contact blob under
+       the hidden shell looks orphaned */
+    dims.visible = VIEWS[S.mode].dims && !S.solo;
+    ground.visible = VIEWS[S.mode].ground;
+    ground.traverse(o => { if (o.userData.isBlob) o.visible = !S.solo; });
+    for (const id in parts) {
+      const g = parts[id].group;
+      /* read the same source of truth the render loop uses, not g.visible, which
+         lags a frame behind */
+      const shown = !hidden.has(id);
+      g.traverse(o => {
+        if (!o.isCSS2DObject) return;
+        const isDim = o.element.classList.contains('dim');
+        let vis = S.labels && shown;
+        if (isDim) vis = S.labels && shown && S.mode === 'deployed';
+        if (S.selected && id !== S.selected && !S.solo) vis = false;
+        o.visible = vis;
+      });
+    }
+    dims.traverse(o => {
+      if (o.isCSS2DObject) o.visible = S.labels && dims.visible;
+    });
+  }
+
+  /* ------------------------------- dragging ------------------------------ */
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const rightV = new THREE.Vector3(), upV = new THREE.Vector3();
+  let drag = null;
+
+  function pick(clientX, clientY) {
+    const r = canvas.getBoundingClientRect();
+    ndc.x = ((clientX - r.left) / r.width) * 2 - 1;
+    ndc.y = -((clientY - r.top) / r.height) * 2 + 1;
+    ray.setFromCamera(ndc, camera);
+    const hits = ray.intersectObjects(pickable.filter(m => m.visible && m.parent
+      && m.parent.visible && m.parent.parent && m.parent.parent.visible), true);
+    return hits.length ? hits[0].object.userData.partId : null;
+  }
+
+  canvas.addEventListener('pointerdown', e => {
+    const id = pick(e.clientX, e.clientY);
+    if (id && id === S.selected && !hidden.has(id)) {
+      drag = { id, x:e.clientX, y:e.clientY, start:offsetOf(id).clone(), moved:false };
+      controls.enabled = false;
+      stage.classList.add('dragging');
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (drag) {
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.hypot(dx, dy) > 2) drag.moved = true;
+      const g = parts[drag.id].group;
+      const dist = camera.position.distanceTo(g.position);
+      const perPx = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist / stage.clientHeight;
+      rightV.setFromMatrixColumn(camera.matrix, 0);
+      upV.setFromMatrixColumn(camera.matrix, 1);
+      offsetOf(drag.id).copy(drag.start)
+        .addScaledVector(rightV, dx * perPx)
+        .addScaledVector(upV, -dy * perPx);
+      return;
+    }
+    const id = pick(e.clientX, e.clientY);
+    if (id !== S.hovered) {
+      if (S.hovered) setHover(S.hovered, false);
+      if (id && !hidden.has(id)) { setHover(id, true); S.hovered = id; }
+      else S.hovered = null;
+      canvas.style.cursor = id ? 'pointer' : 'grab';
+    }
+  });
+  canvas.addEventListener('pointerup', e => {
+    if (drag) {
+      controls.enabled = true;
+      stage.classList.remove('dragging');
+      const moved = drag.moved;
+      const id = drag.id;
+      drag = null;
+      if (S.selected !== id) select(id);
+      else { showPart(id); syncTable(); }
+      if (moved) { /* stay selected so it can be dragged further */ }
+      return;
+    }
+    const id = pick(e.clientX, e.clientY);
+    if (id) select(id);
+    else if (S.selected) clearSelection();
+  });
+  canvas.addEventListener('pointercancel', () => {
+    drag = null; controls.enabled = true; stage.classList.remove('dragging');
+  });
+  window.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (S.selected && offsetOf(S.selected).lengthSq() > 0) {
+      offsetOf(S.selected).set(0, 0, 0);
+    } else if (S.selected) {
+      clearSelection();
+    }
+  });
+
+  /* --------------------------- the parts table --------------------------- */
+  const tbody = document.getElementById('partsBody');
+  let total = 0;
+  const rows = {};
+  for (const p of PARTS) {
+    total += p.mass;
+    const tr = document.createElement('tr');
+    tr.className = 'part';
+    tr.tabIndex = 0;
+    tr.dataset.id = p.id;
+    tr.setAttribute('aria-selected', 'false');
+    const verdictCls = p.fit === 'internal' ? (p.verdict.ok ? 'fit ok' : 'fit no')
+      : (p.fit === 'external' ? 'fit ext' : 'fit');
+    tr.innerHTML =
+      '<td>' + p.name + '</td>' +
+      '<td style="color:var(--muted);font-size:.84rem">' + p.role + '</td>' +
+      '<td><span class="' + verdictCls + '">' + p.verdict.text + '</span></td>' +
+      '<td class="n">' + p.mass + '</td>' +
+      '<td></td>';
+    const eye = document.createElement('button');
+    eye.className = 'eye';
+    eye.type = 'button';
+    eye.textContent = '◉';
+    eye.title = 'hide / show this part';
+    eye.setAttribute('aria-label', 'Hide or show ' + p.name);
+    eye.addEventListener('click', ev => {
+      ev.stopPropagation();
+      if (hidden.has(p.id)) hidden.delete(p.id); else hidden.add(p.id);
+      parts[p.id].group.visible = !hidden.has(p.id);
+      if (S.selected && S.selected !== p.id) isolate(p.id, S.solo);
+      syncTable();
+    });
+    tr.lastElementChild.appendChild(eye);
+    tr.addEventListener('click', () => select(p.id));
+    tr.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(p.id); }
+    });
+    tr.addEventListener('mouseenter', () => { if (!S.selected) setHover(p.id, true); });
+    tr.addEventListener('mouseleave', () => { if (!S.selected) setHover(p.id, false); });
+    tbody.appendChild(tr);
+    rows[p.id] = tr;
+  }
+  document.getElementById('massTotal').textContent = total + ' g';
+
+  function syncTable() {
+    for (const id in rows) {
+      rows[id].setAttribute('aria-selected', String(S.selected === id));
+      rows[id].classList.toggle('offscreen', hidden.has(id));
+    }
+    syncButtons();
+  }
+
+  function showPart(id) {
+    const p = id ? PARTS.find(x => x.id === id) : null;
+    if (!p) {
+      info.innerHTML = '<h3>Pick a part</h3>' +
+        '<p style="font-size:.88rem;margin:0;color:var(--muted)">Click any component — here or ' +
+        'in the model — to select it. Then drag it in the model to pull it out of the stack, ' +
+        'isolate it, or hide it.</p>';
+      return;
+    }
+    const m = parts[id].m;
+    const dimsTxt = m ? (m.box.max.x - m.box.min.x).toFixed(1) + ' × ' +
+      (m.box.max.z - m.box.min.z).toFixed(1) + ' × ' + (m.box.max.y - m.box.min.y).toFixed(1)
+      + ' mm' : '—';
+    const spanTxt = m ? m.minY.toFixed(1) + ' … ' + m.maxY.toFixed(1) + ' mm'
+      + ' (can: ' + Y0 + ' … ' + Y1 + ')' : '—';
+    const verdictColour = p.verdict.ok ? 'var(--teal)' : 'var(--bad)';
+    info.innerHTML =
+      '<h3>' + p.name + '</h3>' +
+      '<div class="roleline">' + p.role + ' · ' + p.mass + ' g</div>' +
+      '<dl>' +
+      '<dt>Spec</dt><dd>' + p.spec + '</dd>' +
+      '<dt>Measured</dt><dd>' + dimsTxt + '</dd>' +
+      '<dt>Height</dt><dd>' + spanTxt + '</dd>' +
+      '<dt>Widest</dt><dd>' + (m ? 'Ø' + (m.maxR * 2).toFixed(1) + ' mm' : '—') + '</dd>' +
+      '<dt>Verdict</dt><dd style="color:' + verdictColour + '"><strong>' + p.verdict.text +
+        '</strong></dd>' +
+      '</dl>' +
+      '<p style="font-size:.88rem;margin:12px 0 0">' + p.note + '</p>' +
+      '<div class="btnrow">' +
+      '<button id="bIso">' + (S.solo ? 'Show everything' : 'Isolate') + '</button>' +
+      '<button id="bHome">Put it back</button>' +
+      '<button id="bHide">' + (hidden.has(id) ? 'Show part' : 'Hide part') + '</button>' +
+      '</div>';
+    const iso = document.getElementById('bIso');
+    if (iso) iso.onclick = () => {
+      if (S.solo) { isolate(id, false); }
+      else {
+        if (S.selected !== id) select(id, { force:true, keepCamera:true });
+        isolate(id, true);
+      }
+      showPart(id);
+    };
+    const home = document.getElementById('bHome');
+    if (home) home.onclick = () => { offsetOf(id).set(0, 0, 0); focusOn(id); };
+    const hide = document.getElementById('bHide');
+    if (hide) hide.onclick = () => {
+      if (hidden.has(id)) hidden.delete(id); else hidden.add(id);
+      parts[id].group.visible = !hidden.has(id);
+      syncTable(); showPart(id);
+    };
+  }
+
+  /* ------------------------------ controls UI ---------------------------- */
+  const vbtns = { assembled:document.getElementById('vCut'),
+                  exploded:document.getElementById('vExp'),
+                  deployed:document.getElementById('vDep') };
+  const tLabels = document.getElementById('tLabels');
+  const tRotate = document.getElementById('tRotate');
+  vbtns.assembled.onclick = () => setView('assembled');
+  vbtns.exploded.onclick  = () => setView('exploded');
+  vbtns.deployed.onclick  = () => setView('deployed');
+  tLabels.onclick = () => { S.labels = !S.labels; for (const id in parts) setLabels(id, true); syncButtons(); };
+  tRotate.onclick = () => { controls.autoRotate = !controls.autoRotate; syncButtons(); };
+  document.getElementById('reset').onclick = () => {
+    for (const id in manual) manual[id].set(0, 0, 0);
+    hidden.clear();
+    clearSelection();
+    setView('assembled');
+  };
+  function syncButtons() {
+    for (const k in vbtns) vbtns[k].setAttribute('aria-pressed', String(S.mode === k));
+    tLabels.setAttribute('aria-pressed', String(S.labels));
+    tRotate.setAttribute('aria-pressed', String(controls.autoRotate));
+    refreshLabels();     // every state change routes through here
+  }
+
+  /* ------------------------------- resize -------------------------------- */
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+    labelRenderer.setSize(w, h);
+  }
+  new ResizeObserver(resize).observe(stage);
+  resize();
+  /* on a phone the callouts crowd the model, so start with them off */
+  if (window.matchMedia('(max-width: 640px)').matches) S.labels = false;
+  setView('assembled', true);             // apply the assembled preset on load
+
+  /* ------------------------------- loop ---------------------------------- */
+  let ready = false;
+  const clock = new THREE.Clock();
+  const tmpBox = new THREE.Box3();
+  const tmpV = new THREE.Vector3();
+
+  function frame() {
+    requestAnimationFrame(frame);
+    const dt = Math.min(clock.getDelta(), 0.05);
+
+    if (camTween) {
+      camTween.t = Math.min(1, camTween.t + dt / 0.8);
+      const e = camTween.t < 0.5 ? 4 * camTween.t ** 3
+                                 : 1 - Math.pow(-2 * camTween.t + 2, 3) / 2;
+      camera.position.lerpVectors(camTween.from, camTween.to, e);
+      controls.target.lerpVectors(camTween.fromT, camTween.toT, e);
+      if (camTween.t >= 1) camTween = null;
+    }
+
+    const k = reduceMotion ? 1 : 1 - Math.pow(0.0025, dt);
+    for (const id in parts) {
+      const p = parts[id];
+      const off = offsetOf(id);
+      /* never let a dragged part sink through the stage: clamp the offset so the
+         part's own lowest vertex stays above the floor */
+      if (p.m && VIEWS[S.mode].ground) {
+        const minOffsetY = (Y0 + 1.5) - (p.home.y + (p.m.minY - p.home.y));
+        const maxOffsetY = 240 - p.home.y;
+        if (off.y < minOffsetY) off.y = minOffsetY;
+        if (off.y > maxOffsetY) off.y = maxOffsetY;
+      }
+      const target = p.home.clone()
+        .addScaledVector(EXPLODE[id] || tmpV.set(0, 0, 0), S.sep / 100)
+        .add(off);
+      p.group.position.lerp(target, drag && drag.id === id ? 1 : k);
+      p.group.visible = !hidden.has(id);
+    }
+
+    chute.visible = deployT > 0.001;
+    const cy = 74 + deployT * 600;
+    chute.position.y += (cy - chute.position.y) * (reduceMotion ? 1 : 1 - Math.pow(0.02, dt));
+    shrouds.forEach((s, i) => {
+      const a = (i / 8) * Math.PI * 2;
+      span(s, Math.cos(a) * CANOPY_R * 0.995, chute.position.y - 1, Math.sin(a) * CANOPY_R * 0.995,
+              Math.cos(a) * 8, 62, Math.sin(a) * 8);
+    });
+
+    const wantOpacity = VIEWS[S.mode].shell;
+    M.alu.opacity += (wantOpacity - M.alu.opacity) * (reduceMotion ? 1 : 1 - Math.pow(0.02, dt));
+    parts.shell.group.visible = !hidden.has('shell') && M.alu.opacity > 0.02;
+
+    /* selection box follows the selected part */
+    if (S.selected && parts[S.selected]) {
+      const g = parts[S.selected].group;
+      tmpBox.setFromObject(g);
+      const size = tmpBox.getSize(new THREE.Vector3());
+      const c = tmpBox.getCenter(new THREE.Vector3());
+      selBox.visible = size.length() > 0.001;
+      selBox.position.copy(c);
+      selBox.scale.set(Math.max(size.x, 0.4) + 2, Math.max(size.y, 0.4) + 2,
+                       Math.max(size.z, 0.4) + 2);
+    } else {
+      selBox.visible = false;
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
+
+    if (!ready) { ready = true; window.__MODEL_READY__ = true; }
+  }
+  frame();
+
+  /* --------------------------- test hooks (mine) ------------------------- */
+  window.modelView = n => setView(n, true);
+  window.modelSelect = id => { if (parts[id]) select(id, { force:true, keepCamera:true }); };
+  window.modelIsolate = (id, on) => {
+    if (on && S.selected !== id) select(id, { force:true, keepCamera:true });
+    isolate(id, on);
+  };
+  window.modelMove = (id, v) => { if (parts[id]) offsetOf(id).set(v[0], v[1], v[2]); };
+  window.modelHide = (id, on) => {
+    if (on) hidden.add(id); else hidden.delete(id);
+    if (parts[id]) parts[id].group.visible = !hidden.has(id);
+    syncTable();
+  };
+  window.modelStatus = () => ({
+    mode:S.mode, sep:S.sep, selected:S.selected, solo:S.solo, labels:S.labels,
+    hidden:[...hidden], rotate:controls.autoRotate, parts:Object.keys(parts).length,
+    totalMass:total, canvas:[renderer.domElement.width, renderer.domElement.height],
+    stage:[stage.clientWidth, stage.clientHeight], aspect:Number(camera.aspect.toFixed(3)),
+    cam:[Math.round(camera.position.x), Math.round(camera.position.y), Math.round(camera.position.z)],
+    target:[Math.round(controls.target.x), Math.round(controls.target.y), Math.round(controls.target.z)],
+    fit:PARTS.filter(p => p.fit === 'internal').map(p => p.id + ':' + p.verdict.text),
+    /* probe: is a non-selected part actually dimmed? */
+    dimProbe:(() => {
+      const other = Object.keys(parts).find(k => k !== S.selected && k !== 'shell');
+      if (!other || !S.selected) return null;
+      return other + '@' + parts[other].meshes[0].material.opacity.toFixed(2);
+    })(),
+    labelCount:(() => {
+      let n = 0;
+      scene.traverse(o => { if (o.isCSS2DObject && o.visible) n++; });
+      return n;
+    })(),
+  });
+}
+</script>
+</body>
+</html>

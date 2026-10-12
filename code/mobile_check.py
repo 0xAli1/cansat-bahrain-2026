@@ -195,9 +195,13 @@ if __name__ == "__main__":
     print("browser:", browser)
     print("checking:", base)
     bad = 0
-    for page in ("index.html", "plan.html", "replay.html"):
+    if base.startswith("http"):
+        pages = ["index.html", "plan.html", "replay.html", "model.html"]
+    else:
+        pages = [f for f in sorted(os.listdir(base))
+                 if f.endswith(".html") and not f.startswith("_")]
+    for page in pages:
         if not base.startswith("http") and not os.path.exists(os.path.join(base, page)):
-            print(f"  [ ] {page:13s} not present in {base}")
             continue
         for w in widths:
             data, shot = check(browser, page, w, shot_dir=shots, base=base)
