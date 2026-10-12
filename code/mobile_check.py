@@ -154,11 +154,14 @@ class Chrome:
 
 
 def check(browser, page, width, height=844, shot_dir=None, base=None):
-    path = os.path.join(base or HERE, page)
-    url = "file:///" + path.replace(os.sep, "/")
+    base = base or HERE
+    if base.startswith("http"):
+        url = base.rstrip("/") + "/" + page          # measure the deployed site
+    else:
+        url = "file:///" + os.path.join(base, page).replace(os.sep, "/")
     c = Chrome(browser, width, height)
     try:
-        c.goto(url)
+        c.goto(url, settle=2.4 if base.startswith("http") else 1.6)
         raw = c.evaluate(MEASURE)
         data = json.loads(raw)
         shot = None
@@ -175,22 +178,25 @@ if __name__ == "__main__":
         print("no Chrome/Edge found")
         sys.exit(1)
 
-    # usage: python mobile_check.py [dir] [widths...]   (dir defaults to this script's)
+    # usage: python mobile_check.py [dir|url] [widths...]   (defaults to this script's dir)
     args = sys.argv[1:]
     base = HERE
     for a in list(args):
-        if os.path.isdir(a):
+        if a.startswith("http"):
+            base = a
+            args.remove(a)
+        elif os.path.isdir(a):
             base = os.path.abspath(a)
             args.remove(a)
     widths = [int(a) for a in args] or [360, 390, 430]
 
-    shots = os.path.join(base, "shots")
+    shots = os.path.join(HERE if base.startswith("http") else base, "shots")
     os.makedirs(shots, exist_ok=True)
     print("browser:", browser)
     print("checking:", base)
     bad = 0
     for page in ("index.html", "plan.html", "replay.html"):
-        if not os.path.exists(os.path.join(base, page)):
+        if not base.startswith("http") and not os.path.exists(os.path.join(base, page)):
             print(f"  [ ] {page:13s} not present in {base}")
             continue
         for w in widths:
